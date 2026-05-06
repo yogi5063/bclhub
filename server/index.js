@@ -315,6 +315,17 @@ app.get('/api/export-excel', requireAuth, (req, res) => {
 });
 
 // GET /clear — clear JWT cookie and redirect to login (no auth needed)
+// Public health check — Railway uses this to confirm service is running
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'BCL Hub', ts: Date.now() });
+});
+app.get('/api/verify', (req, res) => {
+  // Railway default healthcheck path — return 200 so deployment passes
+  const token = req.cookies?.token;
+  if (!token) return res.status(200).json({ status: 'service_ok', auth: false });
+  res.status(200).json({ status: 'service_ok', auth: true });
+});
+
 app.get('/clear', (req, res) => {
   res.clearCookie('token');
   res.redirect('/login');
