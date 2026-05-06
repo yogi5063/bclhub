@@ -6,7 +6,7 @@
   "scripts": {
     "dev:server": "node --watch server/index.js",
     "dev": "node server/index.js",
-    "build": "vite build && node build-js.js",
+    "build": "echo \"dist pre-built and committed to repo — no build needed\"",
     "start": "node server/index.js",
     "setup": "node server/setup-user.js"
   },

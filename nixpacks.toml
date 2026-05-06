@@ -1,12 +1,5 @@
 [phases.setup]
 nixPkgs = ["nodejs_20", "python3"]
 
-[phases.install]
-cmds = ["npm ci --omit=dev"]
-
-[phases.build]
-# dist/ is already committed to the repo — no build step needed
-cmds = []
-
 [start]
 cmd = "node server/index.js"
