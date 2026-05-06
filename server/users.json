@@ -1,0 +1,17 @@
+{
+  "admin": {
+    "hash": "$2a$12$HcRHZBiA01i1JBW73cldgOjvxsqxcnHdZUUgyQib.YGaTz21YS8IO",
+    "role": "admin",
+    "createdAt": "2026-04-27T18:17:26.510Z"
+  },
+  "yogi": {
+    "hash": "$2a$12$HcRHZBiA01i1JBW73cldgOjvxsqxcnHdZUUgyQib.YGaTz21YS8IO",
+    "role": "admin",
+    "createdAt": "2026-04-27T18:17:26.511Z"
+  },
+  "leon": {
+    "hash": "$2a$12$HcRHZBiA01i1JBW73cldgOjvxsqxcnHdZUUgyQib.YGaTz21YS8IO",
+    "role": "viewer",
+    "createdAt": "2026-04-27T18:17:26.511Z"
+  }
+}

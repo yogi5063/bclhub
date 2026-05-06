@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIP MIS Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" crossorigin href="/assets/main-CS6ubzch.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo">FIP <span>MIS</span></div>
+    <div id="top-kpi-bar">
+      <span class="top-kpi grey">Connect your data folder to begin</span>
+    </div>
+    <div id="header-right">
+      <button class="btn btn-primary" id="upload-toggle" title="Upload monthly Consolidated workbook" style="margin-right:12px">
+        📁 Upload Data
+      </button>
+      <span style="font-size:11px;color:var(--t-muted);margin-right:6px">Display:</span>
+      <select id="global-ccy" class="select-sm" style="font-weight:600;margin-right:12px;min-width:90px">
+        <option value="MYR">MYR (RM)</option>
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+        <option value="GBP">GBP (£)</option>
+        <option value="AED">AED</option>
+        <option value="SGD">SGD</option>
+        <option value="INR">INR (₹)</option>
+        <option value="JPY">JPY (¥)</option>
+        <option value="KRW">KRW (₩)</option>
+        <option value="IDR">IDR</option>
+        <option value="BRL">BRL (R$)</option>
+        <option value="PHP">PHP (₱)</option>
+        <option value="THB">THB (฿)</option>
+        <option value="AUD">AUD</option>
+      </select>
+      <button class="btn btn-ghost" id="fx-toggle" title="FX Rates">
+        💱 FX Rates
+      </button>
+      <button class="btn btn-ghost" id="settings-toggle" title="Settings">
+        ⚙ Settings
+      </button>
+      <div id="user-menu">
+        <span id="user-display" class="grey"></span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- UPLOAD DATA MODAL -->
+  <div id="upload-modal" class="modal hidden">
+    <div class="modal-backdrop" id="upload-backdrop"></div>
+    <div class="modal-content" style="max-width:560px">
+      <div class="modal-header">
+        <span>📁 Upload Consolidated Workbook</span>
+        <button class="modal-close" id="upload-close">✕</button>
+      </div>
+      <div class="modal-body" style="padding:24px">
+        <p style="font-size:13px;color:var(--t-muted);margin:0 0 18px 0;line-height:1.5">
+          Upload the monthly Consolidated FIP workbook (.xlsx). The dashboard will parse it and refresh all views automatically.
+        </p>
+
+        <div style="margin-bottom:16px">
+          <label style="font-size:12px;color:var(--t-muted);display:block;margin-bottom:6px;font-weight:600">PERIOD (YYYY-MM)</label>
+          <input id="upload-period" type="text" placeholder="2026-03" pattern="\d{4}-\d{2}"
+                 class="select-sm" style="width:100%;box-sizing:border-box;font-size:14px;padding:8px 10px" />
+          <div style="font-size:11px;color:var(--t-muted);margin-top:4px">e.g. 2026-03 for March 2026 · 2026-04 for April 2026</div>
+        </div>
+
+        <div id="drop-zone" style="border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;background:var(--bg-elev);transition:all .15s">
+          <div style="font-size:36px;margin-bottom:10px">📁</div>
+          <div style="font-weight:600;margin-bottom:4px">Click to choose .xlsx file</div>
+          <div style="font-size:12px;color:var(--t-muted)">or drag-and-drop here</div>
+        </div>
+        <input type="file" id="cons-file-input" accept=".xlsx" style="display:none" />
+
+        <div id="upload-status" style="margin-top:14px;padding:10px 12px;border-radius:6px;font-size:12px;min-height:18px;display:none"></div>
+
+        <div id="periods-list" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"></div>
+
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="modal-refresh-btn" style="flex:1">🔄 Re-parse current data</button>
+          <button class="btn btn-sm" id="modal-export-btn" style="flex:1;background:#1F4E79;color:#fff;border-radius:6px;cursor:pointer">⬇ Export to Excel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal-content" style="max-width:480px">
+      <div class="modal-header">
+        <span>Settings</span>
+        <button class="modal-close" id="settings-close">✕</button>
+      </div>
+      <div class="modal-body" style="padding:var(--sp-lg)">
+        <label style="font-size:12px;color:var(--t-muted);display:block;margin-bottom:4px">Upload Folder Path</label>
+        <input id="settings-upload-dir" class="select-sm" style="width:100%;box-sizing:border-box"
+               placeholder="D:/Perklabs-mis/Upload" />
+        <p style="font-size:11px;color:var(--t-muted);margin-top:8px;line-height:1.5">
+          Root Upload folder — must contain <code>Wix.com/Payment/</code> and <code>Wix.com/Order/</code> subfolders.
+          Saving will re-parse all data with the new path.
+        </p>
+        <div id="settings-msg" style="margin-top:8px;font-size:12px"></div>
+      </div>
+      <div style="padding:var(--sp-md) var(--sp-lg);display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost btn-sm" id="settings-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="settings-save">Save &amp; Refresh</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FX PANEL (fixed overlay) -->
+  <div id="fx-panel" class="hidden">
+    <div id="fx-panel-header">
+      <span>FX Rates (1 MYR = X)</span>
+    </div>
+    <div id="fx-panel-body"><!-- populated by JS --></div>
+    <div id="fx-panel-footer">
+      <button class="btn btn-primary" id="fx-apply-btn" style="width:100%">Apply Rates</button>
+    </div>
+  </div>
+
+  <!-- FILTER AREA (filter bar + expandable pivot panel) -->
+  <div id="filter-area">
+  <div id="filters">
+    <span class="filter-label">Period:</span>
+    <select id="period-select" class="select-sm" style="min-width:140px">
+      <option value="all">All Periods</option>
+    </select>
+    <span id="period-count" class="grey" style="font-size:11px"></span>
+
+    <div class="filter-sep"></div>
+    <span class="filter-label">Brand:</span>
+    <div class="filter-group">
+      <button class="filter-btn active" data-brand="all">All</button>
+      <button class="filter-btn" data-brand="Basmi">Basmi</button>
+      <button class="filter-btn" data-brand="Cure">Cure</button>
+      <button class="filter-btn" data-brand="Molnu">Molnu</button>
+    </div>
+
+    <div class="filter-sep"></div>
+    <span class="filter-label">Country:</span>
+    <select id="territory-select" class="select-sm" style="min-width:150px">
+      <option value="all">All Countries</option>
+    </select>
+    <div id="territory-chips" style="display:none"><!-- populated by JS --></div>
+
+    <div class="filter-sep"></div>
+    <button class="filter-btn" id="pivot-toggle-btn" title="More filters">⊞ Filters</button>
+    <span id="active-filter-count" class="filter-badge" style="display:none"></span>
+    <button class="filter-btn" id="clear-filters-btn" style="display:none;color:var(--c-accent)">✕ Clear</button>
+  </div>
+
+  <!-- PIVOT FILTER PANEL -->
+  <div id="pivot-panel" style="display:none">
+    <div class="pivot-grid">
+      <div class="pivot-group">
+        <div class="pivot-group-label">Date Range</div>
+        <div class="pivot-row">
+          <label>From</label>
+          <input type="date" id="date-from" class="select-sm" />
+          <label>To</label>
+          <input type="date" id="date-to" class="select-sm" />
+          <button class="filter-btn" id="date-apply-btn">Apply</button>
+        </div>
+      </div>
+      <div class="pivot-group">
+        <div class="pivot-group-label">Payment Method</div>
+        <div id="method-chips" class="chip-row"><!-- populated by JS --></div>
+      </div>
+      <div class="pivot-group">
+        <div class="pivot-group-label">Order Status</div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-status="all">All</button>
+          <button class="filter-btn" data-status="paid">Paid</button>
+          <button class="filter-btn" data-status="unpaid">Unpaid</button>
+          <button class="filter-btn" data-status="refunded">Refunded</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- end #filter-area -->
+
+  <!-- BODY -->
+  <div id="body">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+
+      <!-- COMPACT STATUS PANEL (shows current period + last refresh) -->
+      <div id="upload-panel" style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px">
+        <div id="status-line" style="color:var(--t-muted);line-height:1.5">Loading…</div>
+      </div>
+
+      <!-- Hidden inputs (used by upload modal but kept here for legacy app.js code) -->
+      <input type="file" id="file-input" accept=".xlsx,.csv" multiple style="display:none" />
+      <div id="upload-list" style="display:none"></div>
+
+      <!-- NAVIGATION -->
+      <nav id="nav">
+        <div class="nav-item active" data-view="overview">
+          <span class="nav-icon">📊</span> Overview
+        </div>
+        <div class="nav-item admin-only" data-view="build-territory" style="background:rgba(34,197,94,.05);border-left:3px solid #16a34a">
+          <span class="nav-icon">🔨</span> Build Territory
+        </div>
+        <div class="nav-item" data-view="pl">
+          <span class="nav-icon">📋</span> P&amp;L Detail
+        </div>
+        <div class="nav-item" data-view="trends">
+          <span class="nav-icon">📈</span> Trends
+        </div>
+        <div class="nav-item" data-view="products">
+          <span class="nav-icon">📦</span> Products
+        </div>
+        <div class="nav-item" data-view="geography">
+          <span class="nav-icon">🌍</span> Geography
+        </div>
+        <div class="nav-item" data-view="calendar">
+          <span class="nav-icon">📅</span> Calendar
+        </div>
+        <div class="nav-item" data-view="payments">
+          <span class="nav-icon">💳</span> Payments
+        </div>
+        <div class="nav-item" data-view="leakage">
+          <span class="nav-icon">📉</span> Leakage
+        </div>
+        <div class="nav-item" data-view="validation">
+          <span class="nav-icon">✅</span> Validation
+        </div>
+        <div class="nav-item" data-view="ar">
+          <span class="nav-icon">🏦</span> Bank Tie-Out
+        </div>
+        <div class="nav-item" data-view="gateway-recon">
+          <span class="nav-icon">🔁</span> Gateway Recon
+        </div>
+        <div class="nav-item" data-view="reconciliation">
+          <span class="nav-icon">🔀</span> Recon Health
+        </div>
+        <div class="nav-item" data-view="explorer">
+          <span class="nav-icon">🔍</span> Sheet Explorer
+        </div>
+      </nav>
+
+      <!-- TERRITORY SUMMARY LIST -->
+      <div id="sidebar-list"></div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="main">
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <p>Click <strong>Connect Data Folder</strong> to load your data.</p>
+        <p style="font-size:12px;color:var(--t-muted);margin-top:8px">
+          Point to your Upload/ folder — all files are read locally.<br/>
+          Your data never leaves your device.
+        </p>
+      </div>
+    </main>
+
+  </div><!-- #body -->
+</div><!-- #app -->
+
+<!-- CDN Dependencies (loaded before app code) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<!-- All app JS is in a single hashed bundle injected by build-js.js -->
+
+<script src="/assets/bundle-4e743b23.js"></script>
+</body>
+</html>

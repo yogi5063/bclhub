@@ -1,0 +1,30 @@
+{
+  "name": "fip-mis-saas",
+  "version": "1.0.0",
+  "description": "FIP MIS Dashboard — Production SaaS",
+  "type": "module",
+  "scripts": {
+    "dev:server": "node --watch server/index.js",
+    "dev": "node server/index.js",
+    "build": "vite build && node build-js.js",
+    "start": "node server/index.js",
+    "setup": "node server/setup-user.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "puppeteer-core": "^24.42.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "terser": "^5.46.1",
+    "vite": "^5.0.0"
+  }
+}

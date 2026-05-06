@@ -1,0 +1,8 @@
+node_modules/
+.env
+*.log
+server_out.log
+server_err.log
+server.log
+# data_cache.json and users.json ARE included in git for deployment
+# Update data_cache.json locally then commit+push to refresh live data
