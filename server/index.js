@@ -355,11 +355,7 @@ app.listen(PORT, () => {
   console.log(`FIP MIS SaaS running on http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Python: ${PYTHON}`);
-
-  // Auto-run Python parser on startup (non-blocking)
-  execFile(PYTHON, ['parse_consolidated.py'], { cwd: ROOT, timeout: 300000 },
-    (err) => {
-      if (err) console.warn('Python parse failed on startup:', err.message);
-      else console.log('Data cache refreshed successfully.');
-    });
+  // data_cache.json is committed to repo — no startup parse needed.
+  // Use /api/refresh endpoint to update data when needed.
+  console.log('Server ready. Data cache loaded from committed data_cache.json');
 });
