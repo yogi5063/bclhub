@@ -362,7 +362,7 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`FIP MIS SaaS running on http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Python: ${PYTHON}`);
