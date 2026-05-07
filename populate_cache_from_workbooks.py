@@ -1,12 +1,20 @@
 """populate_cache_from_workbooks.py
 Reads territory workbooks from Output/Updated/Territory Workbooks Mar 2026/
 and writes data_cache.json that the dashboard reads from.
+Also pushes data to Supabase (real-time database) if SUPABASE_URL + SUPABASE_KEY are set.
 
 Guarantees dashboard numbers exactly match territory workbooks (pin-to-pin).
 """
 from __future__ import annotations
 import os, sys, json, datetime
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
+# Load .env if present (local dev)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
+except ImportError:
+    pass
 from openpyxl import load_workbook
 
 # ── Config ─────────────────────────────────────────────────────────────────────
@@ -285,6 +293,89 @@ def parse_malaysia():
     return data
 
 
+# ── Supabase push ────────────────────────────────────────────────────────────────
+def push_to_supabase(parsed: dict):
+    """Upsert all territory rows into Supabase territory_data table."""
+    url = os.environ.get('SUPABASE_URL', '').strip()
+    key = os.environ.get('SUPABASE_SERVICE_KEY', '') or os.environ.get('SUPABASE_ANON_KEY', '')
+    key = key.strip()
+    if not url or not key:
+        print('\n  [Supabase] SUPABASE_URL / SUPABASE_KEY not set — skipping push.')
+        return
+
+    try:
+        from supabase import create_client
+    except ImportError:
+        print('\n  [Supabase] supabase package not installed — run: pip install supabase')
+        return
+
+    print(f'\n  [Supabase] Connecting to {url[:40]}...')
+    sb = create_client(url, key)
+
+    rows = []
+    for key_str, d in parsed.items():
+        row = {
+            'territory':         d.get('territory'),
+            'period':            d.get('period'),
+            'brand':             d.get('brand'),
+            'currency':          d.get('currency', 'MYR'),
+            'local_currency':    d.get('local_currency'),
+            'fx_rate_to_myr':    d.get('fx_rate_to_myr', 1),
+            'gross':             d.get('gross', 0),
+            'net':               d.get('net', 0),
+            'shipping':          d.get('shipping', 0),
+            'refund_total':      d.get('refund_total', 0),
+            'discount':          d.get('discount', 0),
+            'tax':               d.get('tax', 0),
+            'fee_payex':         d.get('fee_payex', 0),
+            'fee_stripe':        d.get('fee_stripe', 0),
+            'fee_paypal':        d.get('fee_paypal', 0),
+            'fee_xendit':        d.get('fee_xendit', 0),
+            'fee_tiktok':        d.get('fee_tiktok', 0),
+            'fee_shopee':        d.get('fee_shopee', 0),
+            'fee_lazada':        d.get('fee_lazada', 0),
+            'fee_total':         d.get('fee_total', 0),
+            'gw_payex':          d.get('gw_payex', 0),
+            'gw_stripe_gross':   d.get('gw_stripe_gross', 0),
+            'gw_paypal_gross':   d.get('gw_paypal_gross', 0),
+            'gw_xendit_gross':   d.get('gw_xendit_gross', 0),
+            'gw_stripe_net':     d.get('gw_stripe_net', 0),
+            'gw_paypal_net':     d.get('gw_paypal_net', 0),
+            'gw_xendit_net':     d.get('gw_xendit_net', 0),
+            'gw_settlement_net': d.get('gw_settlement_net', 0),
+            'orders':            d.get('orders', 0),
+            'orders_paid':       d.get('orders_paid', 0),
+            'orders_unpaid':     d.get('orders_unpaid', 0),
+            'orders_refunded':   d.get('orders_refunded', 0),
+            'fulfilled':         d.get('fulfilled', 0),
+            'unfulfilled':       d.get('unfulfilled', 0),
+            'cogs':              d.get('cogs', 0),
+            'gross_profit':      d.get('gross_profit', 0),
+            'aov':               d.get('aov', 0),
+            'margin_pct':        d.get('margin_pct', 0),
+            'payment':           d.get('payment', 0),
+            'dbt':               d.get('dbt', 0),
+            'bank_match':        d.get('bank_match', 0),
+            'refund_auto':       d.get('refund_auto', 0),
+            'refund_manual':     d.get('refund_manual', 0),
+            'chargeback':        d.get('chargeback', 0),
+            'products':          d.get('products', []),
+            'daily':             d.get('daily', {}),
+            'payment_methods':   d.get('payment_methods', {}),
+            'source':            d.get('_source', 'workbook'),
+        }
+        # Convert any non-serialisable floats to plain Python floats
+        for k, v in row.items():
+            if hasattr(v, 'item'):   # numpy scalar
+                row[k] = v.item()
+        rows.append(row)
+
+    # Upsert (insert or update) on (territory, period) unique constraint
+    resp = sb.table('territory_data').upsert(rows, on_conflict='territory,period').execute()
+    count = len(getattr(resp, 'data', []) or [])
+    print(f'  [Supabase] ✓ Upserted {count} rows into territory_data')
+
+
 # ── Run ─────────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     print(f'Populating data_cache.json from territory workbooks ({PERIOD})...\n')
@@ -320,3 +411,6 @@ if __name__ == '__main__':
     print(f'\n✓ Saved {len(parsed)} territories → {CACHE_PATH}')
     total_net = sum(safe(d.get('net', 0)) for d in parsed.values())
     print(f'  Total Net Revenue (all territories): MYR {total_net:,.2f}')
+
+    # ── Push to Supabase (if configured) ──────────────────────────────────────
+    push_to_supabase(parsed)

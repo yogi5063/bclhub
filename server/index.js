@@ -10,6 +10,7 @@ import multer from 'multer';
 import { authRouter } from './auth.js';
 import { requireAuth } from './middleware.js';
 import { handleChat, handleInsights, handleReport } from './ai_cfo.js';
+import { fetchCacheFromSupabase } from './supabase.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.join(__dirname, '..');
@@ -35,8 +36,18 @@ app.use(cors({ origin: false }));
 app.use('/api', authRouter);
 
 // ── Data API ─────────────────────────────────────────────────────────────────
-// GET /api/data — serve cached parsed JSON (behind JWT)
-app.get('/api/data', requireAuth, (req, res) => {
+// GET /api/data — Supabase first, fallback to local JSON cache
+app.get('/api/data', requireAuth, async (req, res) => {
+  // 1. Try Supabase (real-time data)
+  try {
+    const sbData = await fetchCacheFromSupabase();
+    if (sbData && sbData.parsed && Object.keys(sbData.parsed).length > 0) {
+      return res.json(sbData);
+    }
+  } catch (e) {
+    console.warn('[/api/data] Supabase unavailable, using local cache:', e.message);
+  }
+  // 2. Fallback to local data_cache.json
   if (!existsSync(DATA_CACHE))
     return res.status(503).json({ error: 'Data not ready. Click Refresh in the dashboard.' });
   res.sendFile(DATA_CACHE);
