@@ -24,13 +24,19 @@ export function getSupabase() {
  * Fetch all territory data from Supabase and return in the same shape
  * as data_cache.json so the rest of the server code is unchanged.
  */
-export async function fetchCacheFromSupabase(period = null) {
+export async function fetchCacheFromSupabase(period = null, clientId = null) {
   const sb = getSupabase();
   if (!sb) return null;
 
   try {
     let query = sb.from('territory_data').select('*').order('territory');
     if (period) query = query.eq('period', period);
+    // Filter by client — null means legacy/admin data (no client_id set)
+    if (clientId) {
+      query = query.eq('client_id', clientId);
+    } else {
+      query = query.is('client_id', null);
+    }
 
     const { data, error } = await query;
     if (error) throw error;

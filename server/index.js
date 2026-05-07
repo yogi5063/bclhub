@@ -8,9 +8,10 @@ import { execFile, spawn } from 'child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync, readdirSync } from 'fs';
 import multer from 'multer';
 import { authRouter } from './auth.js';
-import { requireAuth } from './middleware.js';
+import { requireAuth, requireAdmin } from './middleware.js';
 import { handleChat, handleInsights, handleReport } from './ai_cfo.js';
 import { fetchCacheFromSupabase } from './supabase.js';
+import { adminRouter } from './admin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.join(__dirname, '..');
@@ -35,12 +36,21 @@ app.use(cors({ origin: false }));
 // ── Auth API ────────────────────────────────────────────────────────────────
 app.use('/api', authRouter);
 
+// ── Admin API (super_admin only) ─────────────────────────────────────────────
+app.use('/api/admin', adminRouter);
+
 // ── Data API ─────────────────────────────────────────────────────────────────
-// GET /api/data — Supabase first, fallback to local JSON cache
+// GET /api/data — Supabase first, filtered by client_id, fallback to local JSON cache
 app.get('/api/data', requireAuth, async (req, res) => {
-  // 1. Try Supabase (real-time data)
+  const { role, client_id } = req.user;
+  // super_admin with ?client= param can preview any client
+  const targetClientId = role === 'super_admin'
+    ? (req.query.client || null)
+    : client_id;
+
+  // 1. Try Supabase (real-time data, isolated by client)
   try {
-    const sbData = await fetchCacheFromSupabase();
+    const sbData = await fetchCacheFromSupabase(null, targetClientId);
     if (sbData && sbData.parsed && Object.keys(sbData.parsed).length > 0) {
       return res.json(sbData);
     }
@@ -345,6 +355,14 @@ app.get('/clear', (req, res) => {
 // ── Login page — served without auth ───────────────────────────────────────
 app.get('/login', (req, res) => {
   res.sendFile(path.join(DIST, 'login.html'));
+});
+
+// ── Admin panel — super_admin only ─────────────────────────────────────────
+app.get('/admin', requireAdmin, (req, res) => {
+  res.sendFile(path.join(DIST, 'admin.html'));
+});
+app.get('/admin-panel.js', requireAdmin, (req, res) => {
+  res.sendFile(path.join(DIST, 'admin-panel.js'));
 });
 
 // Login page assets — must be public (before requireAuth)

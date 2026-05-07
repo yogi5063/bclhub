@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCL Hub — Admin Panel</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #263350;
+    --border: #334155; --accent: #6366f1; --accent2: #22d3ee;
+    --text: #f1f5f9; --muted: #94a3b8; --success: #22c55e;
+    --warning: #f59e0b; --danger: #ef4444;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Top bar */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-logo { font-size: 18px; font-weight: 700; color: var(--accent2); letter-spacing: -0.5px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .topbar-user { font-size: 13px; color: var(--muted); }
+  .topbar-user span { color: var(--text); font-weight: 600; }
+
+  /* Layout */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--border);
+             overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .main { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* Stats bar */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+               padding: 20px; text-align: center; }
+  .stat-number { font-size: 36px; font-weight: 800; color: var(--accent2); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Client list */
+  .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .sidebar-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .client-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+                 padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
+  .client-card:hover { border-color: var(--accent); }
+  .client-card.selected { border-color: var(--accent2); background: #1a3a4a; }
+  .client-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .client-name { font-size: 14px; font-weight: 600; }
+  .client-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Client detail */
+  .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .detail-title { font-size: 22px; font-weight: 700; }
+  .detail-actions { display: flex; gap: 10px; }
+  .detail-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .meta-value { font-size: 14px; font-weight: 600; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase;
+       letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-active    { background: #14532d; color: #86efac; }
+  .badge-suspended { background: #7f1d1d; color: #fca5a5; }
+  .badge-trial     { background: #1e3a5f; color: #93c5fd; }
+  .badge-super_admin  { background: #312e81; color: #c4b5fd; }
+  .badge-client_admin { background: #1e3a5f; color: #93c5fd; }
+  .badge-viewer    { background: #1c1917; color: #d6d3d1; }
+  .plan-badge { background: var(--surface2); color: var(--muted); padding: 1px 6px;
+                border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #4f46e5; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-success { background: #15803d; color: white; }
+  .btn-sm { padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; margin-right: 4px; }
+  .btn-warning { background: #92400e; color: #fde68a; }
+  .btn-danger { background: #7f1d1d; color: #fca5a5; }
+  .btn-accent { background: #164e63; color: var(--accent2); }
+  #logout-btn { background: transparent; border: 1px solid var(--border); color: var(--muted);
+                padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  #logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+                   z-index: 100; align-items: center; justify-content: center; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+           padding: 28px; width: 480px; max-width: 95vw; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 200; padding: 12px 20px;
+           border-radius: 10px; font-size: 14px; font-weight: 600; transform: translateY(20px);
+           opacity: 0; transition: all 0.25s; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-success { background: #14532d; color: #86efac; border: 1px solid #166534; }
+  .toast-error   { background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
+  .toast-warning { background: #78350f; color: #fde68a; border: 1px solid #92400e; }
+
+  .empty-msg { color: var(--muted); font-size: 13px; padding: 16px; text-align: center; }
+  #client-detail { display: none; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-logo">⚡ BCL Hub Admin</div>
+  <div class="topbar-right">
+    <div class="topbar-user">Logged in as <span id="admin-name"></span></div>
+    <button id="logout-btn">Logout</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar: Client List -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Clients</span>
+      <button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="openCreateClientModal()">+ New</button>
+    </div>
+    <div id="client-list">
+      <p class="empty-msg">Loading clients...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-clients">—</div>
+        <div class="stat-label">Total Clients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-users">—</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-rows">—</div>
+        <div class="stat-label">Data Rows</div>
+      </div>
+    </div>
+
+    <!-- Client Detail (shown when client selected) -->
+    <div id="client-detail">
+      <div class="detail-card">
+        <div class="detail-header">
+          <div>
+            <div class="detail-title" id="client-detail-name"></div>
+            <div style="color:var(--muted);font-size:13px;margin-top:4px">
+              bclhub.in<span id="client-slug-display" style="color:var(--accent2)"></span>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a id="preview-link" href="#" target="_blank" class="btn btn-accent">👁 Preview Dashboard</a>
+          </div>
+        </div>
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="meta-label">Plan</span>
+            <span class="meta-value" id="client-plan"></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Status</span>
+            <span class="meta-value" id="client-status"></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Industry</span>
+            <span class="meta-value" id="client-industry"></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Country</span>
+            <span class="meta-value" id="client-country"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="detail-card">
+        <div class="section-header">
+          <span class="section-title">Users</span>
+          <button class="btn btn-success" onclick="openAddUserModal()">+ Add User</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="5" class="empty-msg">Select a client to view users</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placeholder when no client selected -->
+    <div id="no-client-msg" style="text-align:center;padding:80px 0;color:var(--muted);">
+      <div style="font-size:48px;margin-bottom:16px">👈</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px">Select a client from the sidebar</div>
+      <div style="font-size:14px">or create a new client to get started</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create Client Modal -->
+<div class="modal-overlay" id="create-client-modal">
+  <div class="modal">
+    <div class="modal-title">Create New Client</div>
+    <form id="create-client-form">
+      <div class="form-group">
+        <label>Company Name *</label>
+        <input name="name" required placeholder="e.g. ABC Pharma Pte Ltd">
+      </div>
+      <div class="form-group">
+        <label>URL Slug * (used in URL: bclhub.in/slug)</label>
+        <input name="slug" required placeholder="e.g. abc-pharma" pattern="[a-z0-9-]+" title="Lowercase letters, numbers, hyphens only">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Industry</label>
+          <input name="industry" placeholder="e.g. Pharmaceutical">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input name="country" placeholder="e.g. Malaysia">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plan</label>
+          <select name="plan">
+            <option value="basic">Basic</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status">
+            <option value="trial">Trial</option>
+            <option value="active">Active</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('create-client-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Client</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="add-user-modal">
+  <div class="modal">
+    <div class="modal-title">Add User</div>
+    <form id="add-user-form">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input name="name" placeholder="e.g. John Smith">
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input name="email" type="email" required placeholder="john@company.com">
+      </div>
+      <div class="form-group">
+        <label>Password *</label>
+        <input name="password" type="password" required minlength="6" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select name="role">
+          <option value="viewer">Viewer (read-only)</option>
+          <option value="client_admin">Client Admin (can manage)</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('add-user-modal')">Cancel</button>
+        <button type="submit" class="btn btn-success">Add User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Show/hide no-client msg
+const origSelect = window.selectClient;
+window.selectClient = async (id) => {
+  document.getElementById('no-client-msg').style.display = 'none';
+  document.getElementById('client-detail').style.display = 'block';
+  await origSelect(id);
+};
+</script>
+<script type="module" src="/admin-panel.js"></script>
+</body>
+</html>

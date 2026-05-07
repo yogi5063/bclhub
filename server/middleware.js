@@ -1,15 +1,11 @@
 import jwt from 'jsonwebtoken';
 
+// ── Base auth ─────────────────────────────────────────────────────────────────
 export function requireAuth(req, res, next) {
-  // Try HttpOnly cookie first, then Authorization header (for API clients)
   const token = req.cookies?.token
     || (req.headers.authorization?.startsWith('Bearer ')
-        ? req.headers.authorization.slice(7)
-        : null);
+        ? req.headers.authorization.slice(7) : null);
 
-  // CRITICAL: API paths must always return 401, never redirect.
-  // Otherwise fetch() with default redirect:'follow' chases 302 → /login (200)
-  // and login.js mistakes that for "logged in", causing an infinite refresh loop.
   const isApi = req.path.startsWith('/api/') || req.originalUrl.startsWith('/api/');
 
   if (!token) {
@@ -25,4 +21,22 @@ export function requireAuth(req, res, next) {
     if (isApi) return res.status(401).json({ error: 'Session expired' });
     return res.redirect('/login');
   }
+}
+
+// ── Super admin only ──────────────────────────────────────────────────────────
+export function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    next();
+  });
+}
+
+// ── Any authenticated client user ─────────────────────────────────────────────
+export function requireClient(req, res, next) {
+  requireAuth(req, res, () => {
+    // super_admin can access all clients (for previewing)
+    next();
+  });
 }
