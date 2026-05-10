@@ -189,13 +189,6 @@ const terrUploader = multer({
   limits: { fileSize: 500 * 1024 * 1024 },
 });
 
-// Admin-only middleware
-function requireAdmin(req, res, next) {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-}
 
 // POST /api/territory/upload — admin uploads files for a territory build
 app.post('/api/territory/upload', requireAuth, requireAdmin, terrUploader.any(), (req, res) => {
