@@ -7,9 +7,20 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { loginLimiter } from './rateLimit.js';
 import { requireAuth } from './middleware.js';
 import { getSupabase } from './supabase.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const USERS_FILE = path.join(__dirname, 'users.json');
+
+function loadLegacyUsers() {
+  try { return JSON.parse(readFileSync(USERS_FILE, 'utf-8')); }
+  catch { return {}; }
+}
 
 export const authRouter = express.Router();
 
@@ -41,8 +52,24 @@ authRouter.post('/login', loginLimiter, async (req, res) => {
       }
     }
 
-    // Constant-time dummy compare if user not found
+    // ── Fallback to legacy users.json when Supabase not configured ───────────
     if (!user) {
+      const legacy = loadLegacyUsers();
+      const legacyUser = legacy[identifier] || legacy[identifier.split('@')[0]];
+      if (legacyUser) {
+        const ok = await bcrypt.compare(password, legacyUser.hash);
+        if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
+        const token = jwt.sign(
+          { sub: identifier, email: identifier, name: identifier,
+            role: legacyUser.role || 'super_admin', client_id: null,
+            client_name: 'Perk Labs' },
+          process.env.JWT_SECRET, { expiresIn: '7d' }
+        );
+        const isProd = process.env.NODE_ENV === 'production';
+        res.cookie('token', token, { httpOnly: true, secure: isProd, sameSite: 'lax', maxAge: 7*24*60*60*1000 });
+        return res.json({ ok: true, email: identifier, name: identifier, role: legacyUser.role || 'super_admin',
+          client_id: null, client_name: 'Perk Labs', redirect: '/dashboard' });
+      }
       await bcrypt.compare('dummy', '$2b$10$dummyhashtopreventtiming00000000000000000000000000');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
