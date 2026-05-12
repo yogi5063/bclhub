@@ -12,6 +12,7 @@ import { requireAuth, requireAdmin } from './middleware.js';
 import { handleChat, handleInsights, handleReport } from './ai_cfo.js';
 import { fetchCacheFromSupabase } from './supabase.js';
 import { adminRouter } from './admin.js';
+import { fetchRouter } from './api_fetch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.join(__dirname, '..');
@@ -38,6 +39,9 @@ app.use('/api', authRouter);
 
 // ── Admin API (super_admin only) ─────────────────────────────────────────────
 app.use('/api/admin', adminRouter);
+
+// ── API Fetch (Wix + Payex auto-fetch) ───────────────────────────────────────
+app.use('/api', fetchRouter);
 
 // ── Data API ─────────────────────────────────────────────────────────────────
 // GET /api/data — Supabase first, filtered by client_id, fallback to local JSON cache

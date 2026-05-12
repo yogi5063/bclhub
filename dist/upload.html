@@ -9,374 +9,529 @@
   :root{
     --bg:#0f172a;--surface:#1e293b;--surface2:#263350;--border:#334155;
     --accent:#6366f1;--accent2:#22d3ee;--text:#f1f5f9;--muted:#94a3b8;
-    --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--green:#15803d;
+    --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;
   }
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
        background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
 
-  /* Top bar */
   .topbar{background:var(--surface);border-bottom:1px solid var(--border);
-          padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .topbar-left{display:flex;align-items:center;gap:16px}
+          padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
   .topbar-logo{font-size:18px;font-weight:700;color:var(--accent2)}
-  .back-btn{color:var(--muted);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px}
+  .back-btn{color:var(--muted);text-decoration:none;font-size:13px}
   .back-btn:hover{color:var(--text)}
 
-  .main{flex:1;padding:32px 24px;max-width:1100px;margin:0 auto;width:100%}
+  .main{flex:1;padding:28px 24px;max-width:1100px;margin:0 auto;width:100%}
+  .page-title{font-size:24px;font-weight:800;margin-bottom:4px}
+  .page-sub{color:var(--muted);font-size:13px;margin-bottom:24px}
 
-  /* Page title */
-  .page-title{font-size:26px;font-weight:800;margin-bottom:6px}
-  .page-subtitle{color:var(--muted);font-size:14px;margin-bottom:32px}
-
-  /* Steps */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:36px}
-  .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
-  .step-num{width:28px;height:28px;background:var(--accent);border-radius:50%;
-            display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:10px}
-  .step.active .step-num{background:var(--accent2);color:#0f172a}
-  .step-title{font-size:14px;font-weight:700;margin-bottom:4px}
-  .step-desc{font-size:12px;color:var(--muted)}
+  /* Period row */
+  .period-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+              padding:16px 20px;display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+  .period-bar label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .period-bar input{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+                    color:var(--text);padding:8px 12px;font-size:14px}
+  .period-bar input:focus{outline:none;border-color:var(--accent)}
 
   /* Section */
-  .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
-  .section-title{font-size:16px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
-  .section-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+               color:var(--muted);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 
-  /* Templates grid */
-  .templates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-  .template-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
-                 padding:14px;display:flex;flex-direction:column;gap:8px}
-  .template-card-icon{font-size:22px}
-  .template-card-name{font-size:13px;font-weight:600}
-  .template-card-desc{font-size:11px;color:var(--muted);flex:1}
-  .btn-download{padding:7px 14px;background:var(--surface);border:1px solid var(--accent2);
-                color:var(--accent2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;
-                text-decoration:none;display:inline-block;text-align:center;transition:all 0.15s}
-  .btn-download:hover{background:var(--accent2);color:#0f172a}
-  .btn-download-all{padding:10px 20px;background:var(--accent2);color:#0f172a;border:none;
-                    border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.15s}
-  .btn-download-all:hover{background:#06b6d4}
+  /* Source card */
+  .source-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+               padding:16px 18px;margin-bottom:10px;transition:border-color .15s}
+  .source-card.done{border-color:var(--success)}
+  .source-card.partial{border-color:var(--warning)}
 
-  /* Upload grid */
-  .upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-  .upload-slot{background:var(--surface2);border:2px dashed var(--border);border-radius:10px;
-               padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
-  .upload-slot:hover,.upload-slot.drag-over{border-color:var(--accent);background:#1a2744}
-  .upload-slot.uploaded{border-color:var(--success);border-style:solid;background:#0f2d1e}
-  .upload-slot.required{border-color:var(--warning);border-style:dashed}
-  .slot-icon{font-size:24px;margin-bottom:8px}
-  .slot-name{font-size:13px;font-weight:600;margin-bottom:4px}
-  .slot-hint{font-size:11px;color:var(--muted)}
-  .slot-status{font-size:11px;font-weight:600;margin-top:6px}
-  .slot-status.ok{color:var(--success)}
-  .slot-status.req{color:var(--warning)}
-  .slot-file-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .card-icon{font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+             background:var(--surface2);border-radius:8px}
+  .card-info{flex:1}
+  .card-name{font-size:14px;font-weight:700}
+  .card-desc{font-size:11px;color:var(--muted);margin-top:2px}
+  .card-status{font-size:12px;font-weight:600}
+  .card-status.ok{color:var(--success)}
+  .card-status.warn{color:var(--warning)}
+  .card-status.err{color:var(--danger)}
 
-  /* Period selector */
-  .period-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;
-              background:var(--surface2);border-radius:10px;padding:16px}
-  .period-row label{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
-  .period-row input{background:var(--bg);border:1px solid var(--border);border-radius:8px;
-                    color:var(--text);padding:8px 12px;font-size:14px;width:160px}
-  .period-row input:focus{outline:none;border-color:var(--accent)}
+  /* Toggle row */
+  .method-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  /* API fetch button */
+  .btn-api{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#164e63;
+           color:var(--accent2);border:1px solid var(--accent2);border-radius:8px;
+           cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;white-space:nowrap}
+  .btn-api:hover:not(:disabled){background:#155e75}
+  .btn-api:disabled{opacity:.5;cursor:not-allowed}
+  .btn-api.loading{animation:pulse 1s infinite}
+
+  /* Upload slot */
+  .upload-slot{position:relative;display:flex;align-items:center;gap:8px;
+               padding:7px 12px;background:var(--surface2);border:1px dashed var(--border);
+               border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);
+               transition:all .15s;white-space:nowrap}
+  .upload-slot:hover{border-color:var(--accent);color:var(--text)}
+  .upload-slot.done{border-color:var(--success);border-style:solid;color:var(--success)}
+  .upload-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+  .divider{font-size:11px;color:var(--muted)}
+
+  /* Template download */
+  .btn-tmpl{padding:7px 12px;background:transparent;border:1px solid var(--border);
+            border-radius:8px;color:var(--muted);font-size:11px;font-weight:600;
+            text-decoration:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .btn-tmpl:hover{border-color:var(--muted);color:var(--text)}
+
+  /* API config box */
+  .api-config{margin-top:10px;background:var(--bg);border:1px solid var(--border);
+              border-radius:8px;padding:10px 12px;display:none}
+  .api-config.open{display:block}
+  .api-config input{width:100%;background:var(--surface);border:1px solid var(--border);
+                    border-radius:6px;color:var(--text);padding:6px 10px;font-size:12px;margin-top:4px}
+  .api-config input:focus{outline:none;border-color:var(--accent)}
+  .api-config label{font-size:11px;color:var(--muted);font-weight:600}
+  .api-result{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:6px;display:none}
+  .api-result.ok{background:#0f2d1e;color:#86efac;display:block}
+  .api-result.err{background:#2d0f0f;color:#fca5a5;display:block}
 
   /* Build section */
-  .build-section{background:linear-gradient(135deg,#1e1b4b,#1e3a5f);border:1px solid var(--accent);
-                 border-radius:14px;padding:28px;text-align:center;margin-bottom:20px}
-  .build-title{font-size:20px;font-weight:800;margin-bottom:8px}
-  .build-desc{font-size:13px;color:var(--muted);margin-bottom:24px}
-  .btn-build{padding:14px 40px;background:var(--accent);color:white;border:none;
-             border-radius:10px;cursor:pointer;font-size:16px;font-weight:700;
-             transition:all 0.2s;min-width:220px}
+  .build-box{background:linear-gradient(135deg,#1e1b4b,#1e3a5f);border:1px solid var(--accent);
+             border-radius:14px;padding:24px;text-align:center;margin-top:24px}
+  .build-title{font-size:18px;font-weight:800;margin-bottom:6px}
+  .build-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .btn-build{padding:12px 36px;background:var(--accent);color:white;border:none;
+             border-radius:10px;cursor:pointer;font-size:15px;font-weight:700;transition:all .2s}
   .btn-build:hover:not(:disabled){background:#4f46e5;transform:translateY(-1px)}
-  .btn-build:disabled{opacity:0.5;cursor:not-allowed}
-  .build-checklist{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
-  .check-item{font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.08)}
-  .check-item.ok{background:rgba(34,197,94,0.15);color:#86efac}
-  .check-item.missing{background:rgba(239,68,68,0.15);color:#fca5a5}
+  .btn-build:disabled{opacity:.5;cursor:not-allowed}
+  .checklist{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .chk{font-size:11px;padding:3px 10px;border-radius:20px}
+  .chk.ok{background:rgba(34,197,94,.15);color:#86efac}
+  .chk.missing{background:rgba(239,68,68,.15);color:#fca5a5}
+  .chk.opt{background:rgba(148,163,184,.1);color:var(--muted)}
 
   /* Progress */
   .progress-box{display:none;background:var(--surface);border:1px solid var(--border);
-                border-radius:12px;padding:20px;margin-bottom:20px}
+                border-radius:12px;padding:18px;margin-top:16px}
   .progress-box.show{display:block}
-  .progress-title{font-size:14px;font-weight:700;margin-bottom:12px}
-  .progress-bar-wrap{background:var(--bg);border-radius:20px;height:8px;margin-bottom:12px;overflow:hidden}
-  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-                border-radius:20px;transition:width 0.5s;width:0%}
-  .progress-log{background:var(--bg);border-radius:8px;padding:12px;font-family:monospace;
-                font-size:11px;color:var(--accent2);max-height:200px;overflow-y:auto;line-height:1.6}
+  .prog-bar-wrap{background:var(--bg);border-radius:20px;height:6px;margin-bottom:10px;overflow:hidden}
+  .prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:20px;width:0%;transition:width .4s}
+  .prog-log{background:var(--bg);border-radius:8px;padding:10px;font-family:monospace;
+            font-size:11px;color:var(--accent2);max-height:180px;overflow-y:auto;line-height:1.6}
 
-  /* Toast */
-  .toast{position:fixed;bottom:24px;right:24px;z-index:200;padding:12px 20px;border-radius:10px;
-         font-size:14px;font-weight:600;transform:translateY(20px);opacity:0;
-         transition:all 0.25s;pointer-events:none}
+  .toast{position:fixed;bottom:20px;right:20px;z-index:200;padding:10px 18px;border-radius:10px;
+         font-size:13px;font-weight:600;transform:translateY(20px);opacity:0;transition:all .25s;pointer-events:none}
   .toast.show{transform:translateY(0);opacity:1}
   .toast-success{background:#14532d;color:#86efac;border:1px solid #166534}
   .toast-error{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
   .toast-info{background:#1e3a5f;color:#93c5fd;border:1px solid #1e40af}
 
-  @media(max-width:640px){.steps{grid-template-columns:1fr}.templates-grid,.upload-grid{grid-template-columns:1fr}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="topbar-left">
+  <div style="display:flex;align-items:center;gap:16px">
     <div class="topbar-logo">⚡ BCL Hub</div>
-    <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+    <a href="/dashboard" class="back-btn">← Dashboard</a>
   </div>
-  <span id="topbar-period" style="font-size:13px;color:var(--muted)"></span>
+  <span style="font-size:12px;color:var(--muted)" id="period-display"></span>
 </div>
 
 <div class="main">
   <div class="page-title">📤 Upload & Build Dashboard</div>
-  <div class="page-subtitle">Upload your monthly source data and rebuild the live dashboard in one click.</div>
+  <div class="page-sub">Fetch data via API or upload manually — mix and match as needed</div>
 
-  <!-- Steps -->
-  <div class="steps">
-    <div class="step active">
-      <div class="step-num">1</div>
-      <div class="step-title">Download Templates</div>
-      <div class="step-desc">Get the Excel templates with correct column structure</div>
+  <!-- Period -->
+  <div class="period-bar">
+    <label>Report Period</label>
+    <input type="month" id="period" value="2026-04" onchange="updatePeriod()">
+    <span style="font-size:12px;color:var(--muted)">All fetched/uploaded data will be tagged to this period</span>
+  </div>
+
+  <!-- WIX section -->
+  <div class="section-hdr">📦 Wix Reports</div>
+
+  <div class="source-card" id="card-wix_orders">
+    <div class="card-top">
+      <div class="card-icon">🛒</div>
+      <div class="card-info">
+        <div class="card-name">Wix Orders <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">All orders for the selected period</div>
+      </div>
+      <div class="card-status" id="status-wix_orders">Not fetched</div>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-title">Fill & Upload</div>
-      <div class="step-desc">Paste your data into templates and upload each file</div>
+    <div class="method-row">
+      <button class="btn-api" onclick="fetchAPI('wix_orders')" id="btn-api-wix_orders">🔄 Fetch from Wix API</button>
+      <span class="divider">or</span>
+      <div class="upload-slot" id="slot-wix_orders">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('wix_orders',this)">
+        📁 Upload Excel
+      </div>
+      <a href="/api/templates/Wix_Orders_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-title">Build Dashboard</div>
-      <div class="step-desc">Click Build — dashboard updates live in ~2 minutes</div>
+    <div class="api-config" id="cfg-wix_orders"></div>
+  </div>
+
+  <div class="source-card" id="card-wix_payments">
+    <div class="card-top">
+      <div class="card-icon">💳</div>
+      <div class="card-info">
+        <div class="card-name">Wix Payments <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">Payment transactions from Wix Finance</div>
+      </div>
+      <div class="card-status" id="status-wix_payments">Not fetched</div>
+    </div>
+    <div class="method-row">
+      <button class="btn-api" onclick="fetchAPI('wix_payments')" id="btn-api-wix_payments">🔄 Fetch from Wix API</button>
+      <span class="divider">or</span>
+      <div class="upload-slot" id="slot-wix_payments">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('wix_payments',this)">
+        📁 Upload Excel
+      </div>
+      <a href="/api/templates/Wix_Payments_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
     </div>
   </div>
 
-  <!-- Step 1: Templates -->
-  <div class="section">
-    <div class="section-title">📥 Step 1 — Download Templates</div>
-    <div class="section-desc">
-      Download each template, paste your data in from Row 3 onwards. Do NOT change column headers.<br>
-      <span style="color:var(--warning);font-weight:600">⚠ Required for full reconciliation:</span>
-      <span style="color:var(--muted)">Wix Orders + Wix Payments + Stripe + PayPal + Payex + Bank Statements (both accounts) + FX Rates</span>
+  <!-- GATEWAYS section -->
+  <div class="section-hdr">💳 Gateway Reports (Required for Reconciliation)</div>
+
+  <div class="source-card" id="card-payex">
+    <div class="card-top">
+      <div class="card-icon">💰</div>
+      <div class="card-info">
+        <div class="card-name">Payex Settlements <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">Settlement + MDR data — Malaysia / SEA orders</div>
+      </div>
+      <div class="card-status" id="status-payex">Not fetched</div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-download-all" onclick="downloadAll()">⬇ Download All Templates</button>
+    <div class="method-row">
+      <button class="btn-api" onclick="toggleAPIConfig('payex')" id="btn-api-payex">🔄 Fetch from Payex API</button>
+      <span class="divider">or</span>
+      <div class="upload-slot" id="slot-payex">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('payex',this)">
+        📁 Upload Excel
+      </div>
+      <a href="/api/templates/Payex_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
     </div>
-    <div class="templates-grid" id="templates-grid"></div>
+    <div class="api-config" id="cfg-payex">
+      <label>Payex Registered Email</label>
+      <input type="email" id="payex-email" placeholder="your-email@company.com">
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn-api" style="font-size:11px;padding:6px 12px" onclick="fetchPayex()">🔄 Fetch Now</button>
+      </div>
+      <div class="api-result" id="result-payex"></div>
+    </div>
   </div>
 
-  <!-- Step 2: Upload -->
-  <div class="section">
-    <div class="section-title">📤 Step 2 — Select Report Period & Upload Files</div>
-    <div class="section-desc">Set the period (month/year) then upload your filled template files. Required files are marked with ⚠️.</div>
-
-    <div class="period-row">
-      <label>Report Period</label>
-      <input type="month" id="period-input" value="2026-04">
-      <span style="font-size:12px;color:var(--muted)">e.g. 2026-04 for April 2026</span>
+  <div class="source-card" id="card-stripe">
+    <div class="card-top">
+      <div class="card-icon">⚡</div>
+      <div class="card-info">
+        <div class="card-name">Stripe Report <span style="color:var(--muted);font-size:11px">(Korea & Japan)</span></div>
+        <div class="card-desc">Stripe Report 2 — already in MYR, no API needed</div>
+      </div>
+      <div class="card-status" id="status-stripe">Not uploaded</div>
     </div>
-
-    <div class="upload-grid" id="upload-grid"></div>
+    <div class="method-row">
+      <span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:6px 12px;border-radius:8px">ℹ No Stripe API — download from Stripe dashboard</span>
+      <div class="upload-slot" id="slot-stripe">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('stripe',this)">
+        📁 Upload Report 2
+      </div>
+      <a href="/api/templates/Stripe_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
   </div>
 
-  <!-- Step 3: Build -->
-  <div class="build-section">
-    <div class="build-title">🔨 Step 3 — Build Dashboard</div>
-    <div class="build-desc">All required files uploaded? Click Build to process data, calculate P&L for all territories, and update the live dashboard.</div>
-    <button class="btn-build" id="build-btn" onclick="buildDashboard()">▶ Build Dashboard Now</button>
-    <div class="build-checklist" id="build-checklist"></div>
+  <div class="source-card" id="card-paypal">
+    <div class="card-top">
+      <div class="card-icon">🅿️</div>
+      <div class="card-info">
+        <div class="card-name">PayPal Activity</div>
+        <div class="card-desc">Express Checkout payments — international orders</div>
+      </div>
+      <div class="card-status" id="status-paypal">Not uploaded</div>
+    </div>
+    <div class="method-row">
+      <span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:6px 12px;border-radius:8px">ℹ No PayPal API — download from PayPal dashboard</span>
+      <div class="upload-slot" id="slot-paypal">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('paypal',this)">
+        📁 Upload Activity
+      </div>
+      <a href="/api/templates/PayPal_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
   </div>
 
-  <!-- Progress -->
+  <!-- BANK section -->
+  <div class="section-hdr">🏦 Bank Statements (Required for Reconciliation)</div>
+
+  <div class="source-card" id="card-bank_7011">
+    <div class="card-top">
+      <div class="card-icon">🏦</div>
+      <div class="card-info">
+        <div class="card-name">Bank Statement — Account 7011 <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">Citia Trading — Payex + PayPal settlements</div>
+      </div>
+      <div class="card-status" id="status-bank_7011">Not uploaded</div>
+    </div>
+    <div class="method-row">
+      <span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:6px 12px;border-radius:8px">ℹ Download from your bank's internet banking</span>
+      <div class="upload-slot" id="slot-bank_7011">
+        <input type="file" accept=".xlsx,.xls,.csv,.pdf" onchange="handleUpload('bank_7011',this)">
+        📁 Upload Statement
+      </div>
+      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
+  </div>
+
+  <div class="source-card" id="card-bank_7901">
+    <div class="card-top">
+      <div class="card-icon">🏦</div>
+      <div class="card-info">
+        <div class="card-name">Bank Statement — Account 7901 <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">Paw Trading — Stripe settlements</div>
+      </div>
+      <div class="card-status" id="status-bank_7901">Not uploaded</div>
+    </div>
+    <div class="method-row">
+      <span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:6px 12px;border-radius:8px">ℹ Download from your bank's internet banking</span>
+      <div class="upload-slot" id="slot-bank_7901">
+        <input type="file" accept=".xlsx,.xls,.csv,.pdf" onchange="handleUpload('bank_7901',this)">
+        📁 Upload Statement
+      </div>
+      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
+  </div>
+
+  <!-- MARKETPLACE section -->
+  <div class="section-hdr">🏪 Marketplace (Optional)</div>
+
+  <div class="source-card" id="card-marketplace">
+    <div class="card-top">
+      <div class="card-icon">🏪</div>
+      <div class="card-info">
+        <div class="card-name">TikTok / Shopee / Lazada</div>
+        <div class="card-desc">Malaysia marketplace sales — optional</div>
+      </div>
+      <div class="card-status" id="status-marketplace">Optional</div>
+    </div>
+    <div class="method-row">
+      <div class="upload-slot" id="slot-marketplace">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('marketplace',this)">
+        📁 Upload
+      </div>
+      <a href="/api/templates/Marketplace_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
+  </div>
+
+  <!-- CONFIG section -->
+  <div class="section-hdr">⚙️ Config</div>
+
+  <div class="source-card" id="card-fx_rates">
+    <div class="card-top">
+      <div class="card-icon">💱</div>
+      <div class="card-info">
+        <div class="card-name">FX Rates <span style="color:var(--warning);font-size:11px">* Required</span></div>
+        <div class="card-desc">Monthly exchange rates — update every month</div>
+      </div>
+      <div class="card-status" id="status-fx_rates">Not uploaded</div>
+    </div>
+    <div class="method-row">
+      <div class="upload-slot" id="slot-fx_rates">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('fx_rates',this)">
+        📁 Upload
+      </div>
+      <a href="/api/templates/FX_Rates_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+    </div>
+  </div>
+
+  <!-- BUILD -->
+  <div class="build-box">
+    <div class="build-title">🔨 Build Dashboard</div>
+    <div class="build-desc">Process all uploaded/fetched data, calculate 14-territory P&L, update live dashboard</div>
+    <button class="btn-build" id="build-btn" onclick="buildDashboard()">▶ Build Now</button>
+    <div class="checklist" id="checklist"></div>
+  </div>
+
   <div class="progress-box" id="progress-box">
-    <div class="progress-title">⚙️ Building Dashboard...</div>
-    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-    <div class="progress-log" id="progress-log"></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px">⚙️ Building...</div>
+    <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+    <div class="prog-log" id="prog-log"></div>
   </div>
 </div>
 
 <script type="module">
-// Group labels for UI
-const GROUPS = [
-  { label:'Wix Reports (Required)', color:'#6366f1' },
-  { label:'Gateway Reports (Required for Reconciliation)', color:'#f59e0b' },
-  { label:'Bank Statements (Required for Reconciliation)', color:'#ef4444' },
-  { label:'Marketplace (If applicable)', color:'#22c55e' },
-  { label:'Config', color:'#22d3ee' },
-];
-const TEMPLATES = [
-  // Wix
-  { id:'wix_orders',   name:'Wix Orders',        icon:'🛒', file:'Wix_Orders_Template.xlsx',     required:true,  group:0, desc:'All orders — export from Wix Orders dashboard' },
-  { id:'wix_payments', name:'Wix Payments',       icon:'💳', file:'Wix_Payments_Template.xlsx',   required:true,  group:0, desc:'Payment transactions — export from Wix Finance' },
-  { id:'wix_items',    name:'Wix Items',           icon:'📦', file:'Wix_Payments_Template.xlsx',   required:false, group:0, desc:'Order line items — for SKU-level P&L (optional)' },
-  // Gateways
-  { id:'stripe',       name:'Stripe',              icon:'⚡', file:'Stripe_Template.xlsx',         required:true,  group:1, desc:'Stripe Report 2 — Korea & Japan orders' },
-  { id:'paypal',       name:'PayPal',              icon:'🅿️', file:'PayPal_Template.xlsx',         required:true,  group:1, desc:'PayPal activity export — international orders' },
-  { id:'payex',        name:'Payex',               icon:'💰', file:'Payex_Template.xlsx',          required:true,  group:1, desc:'Payex Settlement Report 2 — Malaysia/SEA orders' },
-  // Bank Statements
-  { id:'bank_7011',    name:'Bank Stmt (Acct 7011)', icon:'🏦', file:'Bank_Statement_Template.xlsx', required:true, group:2, desc:'Citia Trading bank account — verify Payex + PayPal settlements' },
-  { id:'bank_7901',    name:'Bank Stmt (Acct 7901)', icon:'🏦', file:'Bank_Statement_Template.xlsx', required:true, group:2, desc:'Paw Trading bank account — verify Stripe settlements' },
-  // Marketplace
-  { id:'marketplace',  name:'TikTok/Shopee/Lazada', icon:'🏪', file:'Marketplace_Template.xlsx',  required:false, group:3, desc:'Marketplace sales — Malaysia only' },
-  { id:'easystore',    name:'Easystore',            icon:'🛍️', file:'Easystore_Template.xlsx',    required:false, group:3, desc:'Easystore orders — if applicable' },
-  // Config
-  { id:'fx_rates',     name:'FX Rates',             icon:'💱', file:'FX_Rates_Template.xlsx',      required:true,  group:4, desc:'Monthly exchange rates — update every month' },
-];
+// ── State ─────────────────────────────────────────────────────────────────────
+const REQUIRED = ['wix_orders','wix_payments','payex','bank_7011','bank_7901','fx_rates'];
+const ALL      = [...REQUIRED,'stripe','paypal','marketplace'];
+const ready    = {}; // id → true when fetched or uploaded
 
-const uploaded = {};
-
-// Render templates grid
-const tGrid = document.getElementById('templates-grid');
-tGrid.innerHTML = TEMPLATES.map(t => `
-  <div class="template-card">
-    <div class="template-card-icon">${t.icon}</div>
-    <div class="template-card-name">${t.name} ${t.required ? '<span style="color:var(--warning)">*</span>' : ''}</div>
-    <div class="template-card-desc">${t.desc}</div>
-    <a href="/api/templates/${t.file}" download class="btn-download">⬇ Download</a>
-  </div>
-`).join('');
-
-// Render upload grid
-const uGrid = document.getElementById('upload-grid');
-uGrid.innerHTML = TEMPLATES.map(t => `
-  <div class="upload-slot ${t.required ? 'required' : ''}" id="slot-${t.id}"
-       ondragover="handleDrag(event,'${t.id}')" ondragleave="handleDragLeave(event,'${t.id}')"
-       ondrop="handleDrop(event,'${t.id}')">
-    <input type="file" class="slot-file-input" accept=".xlsx,.xls"
-           onchange="handleFile(event,'${t.id}')" id="input-${t.id}">
-    <div class="slot-icon">${t.icon}</div>
-    <div class="slot-name">${t.name}</div>
-    <div class="slot-hint">Click or drag .xlsx here</div>
-    <div class="slot-status ${t.required ? 'req' : ''}" id="status-${t.id}">
-      ${t.required ? '⚠ Required' : 'Optional'}
-    </div>
-  </div>
-`).join('');
-
-window.handleDrag = (e, id) => { e.preventDefault(); document.getElementById(`slot-${id}`).classList.add('drag-over'); };
-window.handleDragLeave = (e, id) => { document.getElementById(`slot-${id}`).classList.remove('drag-over'); };
-window.handleDrop = (e, id) => {
-  e.preventDefault();
-  const slot = document.getElementById(`slot-${id}`);
-  slot.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) processUpload(id, e.dataTransfer.files[0]);
+// ── Period ────────────────────────────────────────────────────────────────────
+window.updatePeriod = () => {
+  document.getElementById('period-display').textContent =
+    'Period: ' + document.getElementById('period').value;
 };
-window.handleFile = (e, id) => { if (e.target.files[0]) processUpload(id, e.target.files[0]); };
+updatePeriod();
 
-async function processUpload(id, file) {
-  const slot = document.getElementById(`slot-${id}`);
-  const status = document.getElementById(`status-${id}`);
-  status.textContent = '⏳ Uploading...';
-  status.className = 'slot-status';
-
+// ── Upload handler ────────────────────────────────────────────────────────────
+window.handleUpload = async (id, input) => {
+  const file = input.files[0];
+  if (!file) return;
+  const slot = document.getElementById('slot-' + id);
+  setStatus(id, '⏳ Uploading...', '');
   const fd = new FormData();
   fd.append('file', file);
   fd.append('type', id);
-  fd.append('period', document.getElementById('period-input').value);
-
+  fd.append('period', document.getElementById('period').value);
   try {
     const r = await fetch('/api/upload', { method:'POST', body:fd });
     const d = await r.json();
     if (r.ok) {
-      uploaded[id] = { name: file.name, path: d.path };
-      slot.classList.add('uploaded');
-      slot.classList.remove('required');
-      status.textContent = `✅ ${file.name}`;
-      status.className = 'slot-status ok';
-      showToast(`${file.name} uploaded!`, 'success');
+      ready[id] = true;
+      slot.classList.add('done');
+      slot.innerHTML = `✅ ${file.name.substring(0,25)}`;
+      setStatus(id, '✅ Uploaded', 'ok');
+      document.getElementById('card-' + id).classList.add('done');
+      showToast(file.name + ' uploaded!', 'success');
     } else {
-      status.textContent = `❌ ${d.error}`;
-      status.className = 'slot-status';
-      showToast(d.error, 'error');
+      setStatus(id, '❌ ' + d.error, 'err');
     }
-  } catch(e) {
-    status.textContent = '❌ Upload failed';
-    showToast('Upload failed', 'error');
-  }
+  } catch(e) { setStatus(id, '❌ Upload failed', 'err'); }
   updateChecklist();
+};
+
+// ── API fetch handlers ────────────────────────────────────────────────────────
+window.fetchAPI = async (id) => {
+  const period = document.getElementById('period').value;
+  const btn = document.getElementById('btn-api-' + id);
+  btn.classList.add('loading');
+  btn.disabled = true;
+  setStatus(id, '⏳ Fetching...', '');
+  try {
+    const r = await fetch('/api/fetch-wix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: id, period })
+    });
+    const d = await r.json();
+    if (r.ok && d.ok) {
+      ready[id] = true;
+      setStatus(id, `✅ ${d.count} records fetched`, 'ok');
+      document.getElementById('card-' + id).classList.add('done');
+      showToast(`${d.count} records fetched from Wix!`, 'success');
+    } else {
+      setStatus(id, '❌ ' + (d.error || 'API failed'), 'err');
+      showToast(d.error || 'Fetch failed. Check Wix permissions.', 'error');
+    }
+  } catch(e) { setStatus(id, '❌ ' + e.message, 'err'); }
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  updateChecklist();
+};
+
+window.toggleAPIConfig = (id) => {
+  const cfg = document.getElementById('cfg-' + id);
+  cfg.classList.toggle('open');
+};
+
+window.fetchPayex = async () => {
+  const email = document.getElementById('payex-email').value.trim();
+  const period = document.getElementById('period').value;
+  if (!email) { showToast('Enter your Payex email first', 'error'); return; }
+  setStatus('payex', '⏳ Authenticating...', '');
+  const result = document.getElementById('result-payex');
+  result.className = 'api-result';
+  try {
+    const r = await fetch('/api/fetch-payex', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, period })
+    });
+    const d = await r.json();
+    if (r.ok && d.ok) {
+      ready['payex'] = true;
+      setStatus('payex', `✅ ${d.count} settlements fetched`, 'ok');
+      document.getElementById('card-payex').classList.add('done');
+      result.textContent = `✅ ${d.count} settlements fetched for ${period}`;
+      result.className = 'api-result ok';
+      showToast('Payex settlements fetched!', 'success');
+    } else {
+      setStatus('payex', '❌ ' + (d.error || 'Failed'), 'err');
+      result.textContent = '❌ ' + (d.error || 'Authentication failed. Check email/secret.');
+      result.className = 'api-result err';
+    }
+  } catch(e) { setStatus('payex', '❌ ' + e.message, 'err'); }
+  updateChecklist();
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(id, text, type) {
+  const el = document.getElementById('status-' + id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'card-status' + (type ? ' ' + type : '');
 }
 
 function updateChecklist() {
-  const req = TEMPLATES.filter(t => t.required);
-  const cl = document.getElementById('build-checklist');
-  cl.innerHTML = TEMPLATES.map(t => `
-    <span class="check-item ${uploaded[t.id] ? 'ok' : t.required ? 'missing' : ''}">
-      ${uploaded[t.id] ? '✅' : t.required ? '❌' : '○'} ${t.name}
-    </span>
-  `).join('');
-  const allReqDone = req.every(t => uploaded[t.id]);
-  document.getElementById('build-btn').disabled = !allReqDone;
-  if (!allReqDone) document.getElementById('build-btn').textContent = '⚠ Upload required files first';
-  else document.getElementById('build-btn').textContent = '▶ Build Dashboard Now';
+  const cl = document.getElementById('checklist');
+  cl.innerHTML = ALL.map(id => {
+    const isReq = REQUIRED.includes(id);
+    const isDone = ready[id];
+    const cls = isDone ? 'ok' : (isReq ? 'missing' : 'opt');
+    const label = {
+      wix_orders:'Wix Orders', wix_payments:'Wix Payments',
+      payex:'Payex', stripe:'Stripe', paypal:'PayPal',
+      bank_7011:'Bank 7011', bank_7901:'Bank 7901',
+      marketplace:'Marketplace', fx_rates:'FX Rates'
+    }[id];
+    return `<span class="chk ${cls}">${isDone ? '✅' : isReq ? '❌' : '○'} ${label}</span>`;
+  }).join('');
+  const allReq = REQUIRED.every(id => ready[id]);
+  const btn = document.getElementById('build-btn');
+  btn.disabled = !allReq;
+  btn.textContent = allReq ? '▶ Build Now' : '⚠ Upload required files first';
 }
 
+// ── Build ─────────────────────────────────────────────────────────────────────
 window.buildDashboard = async () => {
-  const period = document.getElementById('period-input').value;
+  const period = document.getElementById('period').value;
   const btn = document.getElementById('build-btn');
   const pBox = document.getElementById('progress-box');
-  const pBar = document.getElementById('progress-bar');
-  const pLog = document.getElementById('progress-log');
-
+  const pBar = document.getElementById('prog-bar');
+  const pLog = document.getElementById('prog-log');
   btn.disabled = true;
   btn.textContent = '⚙️ Building...';
   pBox.classList.add('show');
   pLog.innerHTML = '';
   pBar.style.width = '5%';
-
   const log = (msg, pct) => {
     pLog.innerHTML += `<div>> ${msg}</div>`;
     pLog.scrollTop = pLog.scrollHeight;
     if (pct) pBar.style.width = pct + '%';
   };
-
   log('Starting build for period: ' + period, 10);
   try {
     const r = await fetch('/api/build', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ period, files: uploaded })
+      body: JSON.stringify({ period, files: ready })
     });
-
     const reader = r.body.getReader();
     const decoder = new TextDecoder();
     while(true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const text = decoder.decode(value);
-      text.split('\n').forEach(line => {
+      decoder.decode(value).split('\n').forEach(line => {
         if (!line.trim()) return;
         try {
           const d = JSON.parse(line);
           if (d.log) log(d.log, d.pct);
-          if (d.done) {
-            pBar.style.width = '100%';
-            log('✅ Build complete! Dashboard updated.', 100);
-            showToast('Dashboard updated!', 'success');
-            setTimeout(() => window.location.href = '/dashboard', 2000);
-          }
-          if (d.error) {
-            log('❌ Error: ' + d.error);
-            showToast(d.error, 'error');
-          }
+          if (d.done) { pBar.style.width='100%'; log('✅ Done! Redirecting...'); showToast('Dashboard updated!','success'); setTimeout(()=>window.location.href='/dashboard',2000); }
+          if (d.error) { log('❌ '+d.error); showToast(d.error,'error'); }
         } catch { log(line); }
       });
     }
-  } catch(e) {
-    log('❌ Build failed: ' + e.message);
-    showToast('Build failed', 'error');
-  }
+  } catch(e) { log('❌ '+e.message); showToast('Build failed','error'); }
   btn.disabled = false;
-  btn.textContent = '▶ Build Dashboard Now';
-};
-
-window.downloadAll = () => {
-  TEMPLATES.forEach((t,i) => {
-    setTimeout(() => {
-      const a = document.createElement('a');
-      a.href = `/api/templates/${t.file}`;
-      a.download = t.file;
-      a.click();
-    }, i * 500);
-  });
+  btn.textContent = '▶ Build Now';
 };
 
 function showToast(msg, type='info') {
@@ -384,16 +539,11 @@ function showToast(msg, type='info') {
   t.className = `toast toast-${type}`;
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.classList.add('show'), 10);
-  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3500);
 }
 
-// Init
 updateChecklist();
-document.getElementById('period-input').addEventListener('change', () => {
-  document.getElementById('topbar-period').textContent = 'Period: ' + document.getElementById('period-input').value;
-});
-document.getElementById('topbar-period').textContent = 'Period: ' + document.getElementById('period-input').value;
 </script>
 </body>
 </html>
