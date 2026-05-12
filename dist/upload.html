@@ -153,7 +153,11 @@
   <!-- Step 1: Templates -->
   <div class="section">
     <div class="section-title">📥 Step 1 — Download Templates</div>
-    <div class="section-desc">Download each template, paste your data in from Row 3 onwards (Row 1 = headers, Row 2 = example). Do NOT change column names.</div>
+    <div class="section-desc">
+      Download each template, paste your data in from Row 3 onwards. Do NOT change column headers.<br>
+      <span style="color:var(--warning);font-weight:600">⚠ Required for full reconciliation:</span>
+      <span style="color:var(--muted)">Wix Orders + Wix Payments + Stripe + PayPal + Payex + Bank Statements (both accounts) + FX Rates</span>
+    </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
       <button class="btn-download-all" onclick="downloadAll()">⬇ Download All Templates</button>
     </div>
@@ -191,15 +195,31 @@
 </div>
 
 <script type="module">
+// Group labels for UI
+const GROUPS = [
+  { label:'Wix Reports (Required)', color:'#6366f1' },
+  { label:'Gateway Reports (Required for Reconciliation)', color:'#f59e0b' },
+  { label:'Bank Statements (Required for Reconciliation)', color:'#ef4444' },
+  { label:'Marketplace (If applicable)', color:'#22c55e' },
+  { label:'Config', color:'#22d3ee' },
+];
 const TEMPLATES = [
-  { id:'wix_orders',   name:'Wix Orders',      icon:'🛒', file:'Wix_Orders_Template.xlsx',    required:true,  desc:'All orders from Wix dashboard' },
-  { id:'wix_payments', name:'Wix Payments',     icon:'💳', file:'Wix_Payments_Template.xlsx',  required:true,  desc:'Payment records from Wix' },
-  { id:'wix_items',    name:'Wix Items',         icon:'📦', file:'Wix_Payments_Template.xlsx',  required:false, desc:'Order line items (optional)' },
-  { id:'stripe',       name:'Stripe',            icon:'⚡', file:'Stripe_Template.xlsx',        required:false, desc:'Stripe settlement report 2' },
-  { id:'paypal',       name:'PayPal',            icon:'🅿️', file:'PayPal_Template.xlsx',        required:false, desc:'PayPal activity report' },
-  { id:'payex',        name:'Payex',             icon:'💰', file:'Payex_Template.xlsx',         required:false, desc:'Payex settlement report 2' },
-  { id:'marketplace',  name:'Marketplace',       icon:'🏪', file:'Marketplace_Template.xlsx',   required:false, desc:'TikTok / Shopee / Lazada' },
-  { id:'fx_rates',     name:'FX Rates',          icon:'💱', file:'FX_Rates_Template.xlsx',      required:true,  desc:'Monthly exchange rates' },
+  // Wix
+  { id:'wix_orders',   name:'Wix Orders',        icon:'🛒', file:'Wix_Orders_Template.xlsx',     required:true,  group:0, desc:'All orders — export from Wix Orders dashboard' },
+  { id:'wix_payments', name:'Wix Payments',       icon:'💳', file:'Wix_Payments_Template.xlsx',   required:true,  group:0, desc:'Payment transactions — export from Wix Finance' },
+  { id:'wix_items',    name:'Wix Items',           icon:'📦', file:'Wix_Payments_Template.xlsx',   required:false, group:0, desc:'Order line items — for SKU-level P&L (optional)' },
+  // Gateways
+  { id:'stripe',       name:'Stripe',              icon:'⚡', file:'Stripe_Template.xlsx',         required:true,  group:1, desc:'Stripe Report 2 — Korea & Japan orders' },
+  { id:'paypal',       name:'PayPal',              icon:'🅿️', file:'PayPal_Template.xlsx',         required:true,  group:1, desc:'PayPal activity export — international orders' },
+  { id:'payex',        name:'Payex',               icon:'💰', file:'Payex_Template.xlsx',          required:true,  group:1, desc:'Payex Settlement Report 2 — Malaysia/SEA orders' },
+  // Bank Statements
+  { id:'bank_7011',    name:'Bank Stmt (Acct 7011)', icon:'🏦', file:'Bank_Statement_Template.xlsx', required:true, group:2, desc:'Citia Trading bank account — verify Payex + PayPal settlements' },
+  { id:'bank_7901',    name:'Bank Stmt (Acct 7901)', icon:'🏦', file:'Bank_Statement_Template.xlsx', required:true, group:2, desc:'Paw Trading bank account — verify Stripe settlements' },
+  // Marketplace
+  { id:'marketplace',  name:'TikTok/Shopee/Lazada', icon:'🏪', file:'Marketplace_Template.xlsx',  required:false, group:3, desc:'Marketplace sales — Malaysia only' },
+  { id:'easystore',    name:'Easystore',            icon:'🛍️', file:'Easystore_Template.xlsx',    required:false, group:3, desc:'Easystore orders — if applicable' },
+  // Config
+  { id:'fx_rates',     name:'FX Rates',             icon:'💱', file:'FX_Rates_Template.xlsx',      required:true,  group:4, desc:'Monthly exchange rates — update every month' },
 ];
 
 const uploaded = {};
