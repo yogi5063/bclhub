@@ -390,9 +390,10 @@ if supabase_url and supabase_key:
     import urllib.request, urllib.error
     for ter, d in data.items():
         if d['orders'] == 0 and d['gross'] == 0: continue
+        d['data_source'] = 'manual_upload'   # tag uploaded data separately from system workbooks
         payload = json.dumps(d).encode('utf-8')
         req = urllib.request.Request(
-            f"{supabase_url}/rest/v1/territory_data",
+            f"{supabase_url}/rest/v1/territory_data?on_conflict=territory,period,data_source",
             data=payload,
             headers={
                 'apikey': supabase_key,
