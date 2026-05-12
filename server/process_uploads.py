@@ -60,9 +60,26 @@ if fx_file:
     try:
         wb = load_workbook(fx_file, data_only=True, read_only=True)
         ws = wb.active
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            if row[0] and row[2]:
-                try: fx[str(row[0]).strip().upper()] = float(row[2])
+        # Smart header detection: find row with 'Currency' header
+        fx_data_row = 2
+        for try_row in [1, 2, 3, 4, 5]:
+            test = [str(c or '').strip().lower() for c in next(ws.iter_rows(min_row=try_row, max_row=try_row, values_only=True))]
+            if 'currency' in test:
+                # Find column positions
+                ci_cur = test.index('currency')
+                ci_rate = next((i for i,h in enumerate(test) if 'rate' in h), ci_cur + 1)
+                fx_data_row = try_row + 1
+                break
+        else:
+            ci_cur, ci_rate, fx_data_row = 0, 1, 2
+
+        for row in ws.iter_rows(min_row=fx_data_row, values_only=True):
+            if row and len(row) > ci_rate and row[ci_cur] and row[ci_rate]:
+                try:
+                    ccy = str(row[ci_cur]).strip().upper()
+                    rate = float(row[ci_rate])
+                    if ccy and rate > 0:
+                        fx[ccy] = rate
                 except: pass
         wb.close()
         emit(f'FX rates loaded: {len(fx)} currencies', 10)
@@ -133,26 +150,41 @@ if orders_file:
     try:
         wb = load_workbook(orders_file, data_only=True, read_only=True)
         ws = wb.active
-        headers = [str(c.value or '').strip() for c in next(ws.iter_rows(min_row=1,max_row=1))]
+        # Smart header detection: find the row with 'Region' header (may be row 1 or 2)
+        header_row = 1
+        data_start_row = 2
+        for try_row in [1, 2, 3, 4]:
+            test_hdrs = [str(c or '').strip().lower() for c in next(ws.iter_rows(min_row=try_row, max_row=try_row, values_only=True))]
+            if 'region' in test_hdrs:
+                header_row = try_row
+                data_start_row = try_row + 1
+                break
+        headers_raw = [str(c or '').strip() for c in next(ws.iter_rows(min_row=header_row, max_row=header_row, values_only=True))]
+        # Normalise: strip case for matching
+        headers = [h.lower() for h in headers_raw]
         def col(name):
-            try: return headers.index(name)
-            except: return -1
+            n = name.lower()
+            if n in headers: return headers.index(n)
+            # Partial match fallback
+            for i, h in enumerate(headers):
+                if n in h or h in n: return i
+            return -1
 
         ci_region   = col('Region')
         ci_currency = col('Currency')
         ci_total    = col('Total')
-        ci_net      = col('Net Amount')
-        ci_refund   = col('Refunded Amount')
-        ci_ship     = col('Shipping Rate')
-        ci_tax      = col('Tax')
+        ci_net      = col('Net amount')        # Wix field: Total - Refunds
+        ci_refund   = col('Refunded amount')
+        ci_ship     = col('Shipping rate')
+        ci_tax      = col('Total tax')
         ci_discount = col('Discount')
-        ci_coupon   = col('Coupon Discount')
-        ci_paystatus= col('Payment Status')
-        ci_fulstatus= col('Fulfillment Status')
-        ci_country  = col('Billing Country')
+        ci_coupon   = col('Coupon code')
+        ci_paystatus= col('Payment status')
+        ci_fulstatus= col('Fulfillment status')
+        ci_country  = col('Billing country')
 
         rows = 0
-        for row in ws.iter_rows(min_row=2, values_only=True):
+        for row in ws.iter_rows(min_row=data_start_row, values_only=True):
             if not row or not any(row): continue
             # Skip sample/note rows
             r0 = str(row[0] or '').strip()
@@ -165,19 +197,19 @@ if orders_file:
             d = data[ter]
 
             gross_native = safe(row[ci_total] if ci_total >= 0 and len(row) > ci_total else 0)
-            net_native   = safe(row[ci_net]   if ci_net >= 0 and len(row) > ci_net else 0)
             ref_native   = safe(row[ci_refund] if ci_refund >= 0 and len(row) > ci_refund else 0)
             ship_native  = safe(row[ci_ship]  if ci_ship >= 0 and len(row) > ci_ship else 0)
             tax_native   = safe(row[ci_tax]   if ci_tax >= 0 and len(row) > ci_tax else 0)
             disc_native  = safe(row[ci_discount] if ci_discount >= 0 and len(row) > ci_discount else 0)
-            coupon_native= safe(row[ci_coupon] if ci_coupon >= 0 and len(row) > ci_coupon else 0)
+            # net = Total - Refunds (Wix 'Net amount' also deducts gateway fees - don't use it)
+            net_native   = gross_native - ref_native
 
             d['gross']        += to_myr(gross_native, cur)
             d['net']          += to_myr(net_native, cur)
             d['refund_total'] += to_myr(ref_native, cur)
             d['shipping']     += to_myr(ship_native, cur)
             d['tax']          += to_myr(tax_native, cur)
-            d['discount']     += to_myr(disc_native + coupon_native, cur)
+            d['discount']     += to_myr(disc_native, cur)  # coupon is text field, not numeric
             d['orders']       += 1
 
             pay_status = str(row[ci_paystatus] if ci_paystatus >= 0 and len(row) > ci_paystatus else '' or '').strip()
@@ -269,23 +301,34 @@ if payex_file:
     try:
         wb = load_workbook(payex_file, data_only=True, read_only=True)
         ws = wb['Payex Report 2'] if 'Payex Report 2' in wb.sheetnames else wb.active
-        headers = [str(c.value or '').strip() for c in next(ws.iter_rows(min_row=1,max_row=1))]
-        col_type = next((i for i,h in enumerate(headers) if 'type' in h.lower()), 8)
-        col_settle= next((i for i,h in enumerate(headers) if 'settlement amount' in h.lower() or ('settlement' in h.lower() and 'myr' in h.lower())), 13)
-        col_mdr  = next((i for i,h in enumerate(headers) if 'mdr amount' in h.lower() or 'mdr' in h.lower()), 16)
+        headers = [str(c.value or '').strip().lower() for c in next(ws.iter_rows(min_row=1,max_row=1))]
+        # Actual Payex Report 2 columns: Type(7), Gross(20), MDR(21), Net(23)
+        col_type  = next((i for i,h in enumerate(headers) if h == 'type'), 7)
+        col_gross = next((i for i,h in enumerate(headers) if h == 'gross'), 20)
+        col_mdr   = next((i for i,h in enumerate(headers) if h == 'mdr'), 21)
+        col_net   = next((i for i,h in enumerate(headers) if h == 'net'), 23)
 
-        total_mdr = 0
+        col_currency = next((i for i,h in enumerate(headers) if h == 'currency'), 19)
+        total_mdr = 0; total_gross = 0
         for row in ws.iter_rows(min_row=2, values_only=True):
             if not row or not any(row): continue
             type_val = str(row[col_type] if len(row) > col_type else '' or '').lower()
             if 'settlement' not in type_val: continue
-            settle = safe(row[col_settle] if len(row) > col_settle else 0)
+            cur    = str(row[col_currency] if len(row) > col_currency else 'MYR' or 'MYR').strip()
+            gross  = safe(row[col_gross] if len(row) > col_gross else 0)
             mdr    = safe(row[col_mdr] if len(row) > col_mdr else 0)
-            data['Malaysia']['gw_payex'] += settle
-            data['Malaysia']['fee_payex'] += mdr
-            total_mdr += mdr
+            gross_myr = to_myr(gross, cur)
+            mdr_myr   = to_myr(mdr, cur)
+            # Territory from currency (rough mapping — proper join done in reconciliation)
+            ter = {'MYR':'Malaysia','KRW':'Korea','JPY':'Japan','IDR':'Indonesia',
+                   'PHP':'Philippines','THB':'Thailand','BRL':'Brasil',
+                   'AED':'GCC','SAR':'GCC','USD':'USA','EUR':'Europe',
+                   'AUD':'Oceania','INR':'India','MXN':'Latam'}.get(cur, 'Malaysia')
+            data[ter]['gw_payex']  += gross_myr
+            data[ter]['fee_payex'] += mdr_myr
+            total_mdr += mdr_myr; total_gross += gross_myr
         wb.close()
-        emit(f'Payex: total MDR = MYR {total_mdr:,.2f}', 70)
+        emit(f'Payex: gross = MYR {total_gross:,.2f} | MDR = MYR {total_mdr:,.2f}', 70)
     except Exception as e:
         emit(f'Payex warning: {e}')
 

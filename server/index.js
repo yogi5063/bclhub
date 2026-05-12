@@ -399,7 +399,8 @@ const sourceUploadStorage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const type = (req.body.type || 'file').replace(/[^a-z0-9_]/gi, '');
+    // Use query param (available before body parsed) OR body OR original filename
+    const type = (req.query.type || req.body?.type || 'file').replace(/[^a-z0-9_]/gi, '');
     cb(null, `${type}_${Date.now()}.xlsx`);
   },
 });
