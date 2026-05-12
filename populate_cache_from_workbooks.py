@@ -363,6 +363,7 @@ def push_to_supabase(parsed: dict):
             'daily':             d.get('daily', {}),
             'payment_methods':   d.get('payment_methods', {}),
             'source':            d.get('_source', 'workbook'),
+            'data_source':       'system_workbook',   # tagged as coming from local territory workbooks
         }
         # Convert any non-serialisable floats to plain Python floats
         for k, v in row.items():

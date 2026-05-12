@@ -13,6 +13,7 @@ import { handleChat, handleInsights, handleReport } from './ai_cfo.js';
 import { fetchCacheFromSupabase } from './supabase.js';
 import { adminRouter } from './admin.js';
 import { fetchRouter } from './api_fetch.js';
+import { insightsRouter } from './insights.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.join(__dirname, '..');
@@ -43,6 +44,9 @@ app.use('/api/admin', adminRouter);
 // ── API Fetch (Wix + Payex auto-fetch) ───────────────────────────────────────
 app.use('/api', fetchRouter);
 
+// ── AI Insights engine ───────────────────────────────────────────────────────
+app.use('/api/insights', insightsRouter);
+
 // ── Data API ─────────────────────────────────────────────────────────────────
 // GET /api/data — Supabase first, filtered by client_id, fallback to local JSON cache
 app.get('/api/data', requireAuth, async (req, res) => {
@@ -52,11 +56,14 @@ app.get('/api/data', requireAuth, async (req, res) => {
     ? (req.query.client || null)
     : client_id;
 
-  // 1. Try Supabase (real-time data, isolated by client)
+  // data_source filter: 'system_workbook' | 'manual_upload' | null (all)
+  const dataSource = req.query.source || null;
+
+  // 1. Try Supabase (real-time data, isolated by client + source)
   try {
-    const sbData = await fetchCacheFromSupabase(null, targetClientId);
+    const sbData = await fetchCacheFromSupabase(null, targetClientId, dataSource);
     if (sbData && sbData.parsed && Object.keys(sbData.parsed).length > 0) {
-      return res.json(sbData);
+      return res.json({ ...sbData, data_source: dataSource || 'all' });
     }
   } catch (e) {
     console.warn('[/api/data] Supabase unavailable, using local cache:', e.message);
