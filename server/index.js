@@ -384,7 +384,7 @@ app.get('/api/templates/:filename', requireAuth, (req, res) => {
 const uploadDir = process.env.UPLOAD_DIR || '/tmp/uploads';
 mkdirSync(uploadDir, { recursive: true });
 
-const uploadStorage = multer.diskStorage({
+const sourceUploadStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const session = req.user.sub?.replace(/[^a-z0-9]/gi, '') || 'default';
     const dir = path.join(uploadDir, session);
@@ -396,7 +396,7 @@ const uploadStorage = multer.diskStorage({
     cb(null, `${type}_${Date.now()}.xlsx`);
   },
 });
-const uploader = multer({ storage: uploadStorage, limits: { fileSize: 100 * 1024 * 1024 } });
+const uploader = multer({ storage: sourceUploadStorage, limits: { fileSize: 100 * 1024 * 1024 } });
 
 app.post('/api/upload', requireAuth, uploader.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
