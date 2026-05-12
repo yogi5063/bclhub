@@ -1,5 +1,8 @@
 [phases.setup]
 nixPkgs = ["nodejs_20", "python3"]
 
+[phases.install]
+cmds = ["npm ci", "pip3 install openpyxl pandas supabase"]
+
 [start]
 cmd = "node server/index.js"

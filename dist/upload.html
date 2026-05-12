@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCL Hub — Upload & Build</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f172a;--surface:#1e293b;--surface2:#263350;--border:#334155;
+    --accent:#6366f1;--accent2:#22d3ee;--text:#f1f5f9;--muted:#94a3b8;
+    --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--green:#15803d;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+       background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+  /* Top bar */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);
+          padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .topbar-left{display:flex;align-items:center;gap:16px}
+  .topbar-logo{font-size:18px;font-weight:700;color:var(--accent2)}
+  .back-btn{color:var(--muted);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px}
+  .back-btn:hover{color:var(--text)}
+
+  .main{flex:1;padding:32px 24px;max-width:1100px;margin:0 auto;width:100%}
+
+  /* Page title */
+  .page-title{font-size:26px;font-weight:800;margin-bottom:6px}
+  .page-subtitle{color:var(--muted);font-size:14px;margin-bottom:32px}
+
+  /* Steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:36px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+  .step-num{width:28px;height:28px;background:var(--accent);border-radius:50%;
+            display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:10px}
+  .step.active .step-num{background:var(--accent2);color:#0f172a}
+  .step-title{font-size:14px;font-weight:700;margin-bottom:4px}
+  .step-desc{font-size:12px;color:var(--muted)}
+
+  /* Section */
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
+  .section-title{font-size:16px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .section-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+  /* Templates grid */
+  .templates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+  .template-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+                 padding:14px;display:flex;flex-direction:column;gap:8px}
+  .template-card-icon{font-size:22px}
+  .template-card-name{font-size:13px;font-weight:600}
+  .template-card-desc{font-size:11px;color:var(--muted);flex:1}
+  .btn-download{padding:7px 14px;background:var(--surface);border:1px solid var(--accent2);
+                color:var(--accent2);border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;
+                text-decoration:none;display:inline-block;text-align:center;transition:all 0.15s}
+  .btn-download:hover{background:var(--accent2);color:#0f172a}
+  .btn-download-all{padding:10px 20px;background:var(--accent2);color:#0f172a;border:none;
+                    border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.15s}
+  .btn-download-all:hover{background:#06b6d4}
+
+  /* Upload grid */
+  .upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .upload-slot{background:var(--surface2);border:2px dashed var(--border);border-radius:10px;
+               padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+  .upload-slot:hover,.upload-slot.drag-over{border-color:var(--accent);background:#1a2744}
+  .upload-slot.uploaded{border-color:var(--success);border-style:solid;background:#0f2d1e}
+  .upload-slot.required{border-color:var(--warning);border-style:dashed}
+  .slot-icon{font-size:24px;margin-bottom:8px}
+  .slot-name{font-size:13px;font-weight:600;margin-bottom:4px}
+  .slot-hint{font-size:11px;color:var(--muted)}
+  .slot-status{font-size:11px;font-weight:600;margin-top:6px}
+  .slot-status.ok{color:var(--success)}
+  .slot-status.req{color:var(--warning)}
+  .slot-file-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+  /* Period selector */
+  .period-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;
+              background:var(--surface2);border-radius:10px;padding:16px}
+  .period-row label{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+  .period-row input{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+                    color:var(--text);padding:8px 12px;font-size:14px;width:160px}
+  .period-row input:focus{outline:none;border-color:var(--accent)}
+
+  /* Build section */
+  .build-section{background:linear-gradient(135deg,#1e1b4b,#1e3a5f);border:1px solid var(--accent);
+                 border-radius:14px;padding:28px;text-align:center;margin-bottom:20px}
+  .build-title{font-size:20px;font-weight:800;margin-bottom:8px}
+  .build-desc{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .btn-build{padding:14px 40px;background:var(--accent);color:white;border:none;
+             border-radius:10px;cursor:pointer;font-size:16px;font-weight:700;
+             transition:all 0.2s;min-width:220px}
+  .btn-build:hover:not(:disabled){background:#4f46e5;transform:translateY(-1px)}
+  .btn-build:disabled{opacity:0.5;cursor:not-allowed}
+  .build-checklist{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .check-item{font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.08)}
+  .check-item.ok{background:rgba(34,197,94,0.15);color:#86efac}
+  .check-item.missing{background:rgba(239,68,68,0.15);color:#fca5a5}
+
+  /* Progress */
+  .progress-box{display:none;background:var(--surface);border:1px solid var(--border);
+                border-radius:12px;padding:20px;margin-bottom:20px}
+  .progress-box.show{display:block}
+  .progress-title{font-size:14px;font-weight:700;margin-bottom:12px}
+  .progress-bar-wrap{background:var(--bg);border-radius:20px;height:8px;margin-bottom:12px;overflow:hidden}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+                border-radius:20px;transition:width 0.5s;width:0%}
+  .progress-log{background:var(--bg);border-radius:8px;padding:12px;font-family:monospace;
+                font-size:11px;color:var(--accent2);max-height:200px;overflow-y:auto;line-height:1.6}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;right:24px;z-index:200;padding:12px 20px;border-radius:10px;
+         font-size:14px;font-weight:600;transform:translateY(20px);opacity:0;
+         transition:all 0.25s;pointer-events:none}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast-success{background:#14532d;color:#86efac;border:1px solid #166534}
+  .toast-error{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
+  .toast-info{background:#1e3a5f;color:#93c5fd;border:1px solid #1e40af}
+
+  @media(max-width:640px){.steps{grid-template-columns:1fr}.templates-grid,.upload-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">⚡ BCL Hub</div>
+    <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+  </div>
+  <span id="topbar-period" style="font-size:13px;color:var(--muted)"></span>
+</div>
+
+<div class="main">
+  <div class="page-title">📤 Upload & Build Dashboard</div>
+  <div class="page-subtitle">Upload your monthly source data and rebuild the live dashboard in one click.</div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active">
+      <div class="step-num">1</div>
+      <div class="step-title">Download Templates</div>
+      <div class="step-desc">Get the Excel templates with correct column structure</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Fill & Upload</div>
+      <div class="step-desc">Paste your data into templates and upload each file</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Build Dashboard</div>
+      <div class="step-desc">Click Build — dashboard updates live in ~2 minutes</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Templates -->
+  <div class="section">
+    <div class="section-title">📥 Step 1 — Download Templates</div>
+    <div class="section-desc">Download each template, paste your data in from Row 3 onwards (Row 1 = headers, Row 2 = example). Do NOT change column names.</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn-download-all" onclick="downloadAll()">⬇ Download All Templates</button>
+    </div>
+    <div class="templates-grid" id="templates-grid"></div>
+  </div>
+
+  <!-- Step 2: Upload -->
+  <div class="section">
+    <div class="section-title">📤 Step 2 — Select Report Period & Upload Files</div>
+    <div class="section-desc">Set the period (month/year) then upload your filled template files. Required files are marked with ⚠️.</div>
+
+    <div class="period-row">
+      <label>Report Period</label>
+      <input type="month" id="period-input" value="2026-04">
+      <span style="font-size:12px;color:var(--muted)">e.g. 2026-04 for April 2026</span>
+    </div>
+
+    <div class="upload-grid" id="upload-grid"></div>
+  </div>
+
+  <!-- Step 3: Build -->
+  <div class="build-section">
+    <div class="build-title">🔨 Step 3 — Build Dashboard</div>
+    <div class="build-desc">All required files uploaded? Click Build to process data, calculate P&L for all territories, and update the live dashboard.</div>
+    <button class="btn-build" id="build-btn" onclick="buildDashboard()">▶ Build Dashboard Now</button>
+    <div class="build-checklist" id="build-checklist"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-box" id="progress-box">
+    <div class="progress-title">⚙️ Building Dashboard...</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="progress-log" id="progress-log"></div>
+  </div>
+</div>
+
+<script type="module">
+const TEMPLATES = [
+  { id:'wix_orders',   name:'Wix Orders',      icon:'🛒', file:'Wix_Orders_Template.xlsx',    required:true,  desc:'All orders from Wix dashboard' },
+  { id:'wix_payments', name:'Wix Payments',     icon:'💳', file:'Wix_Payments_Template.xlsx',  required:true,  desc:'Payment records from Wix' },
+  { id:'wix_items',    name:'Wix Items',         icon:'📦', file:'Wix_Payments_Template.xlsx',  required:false, desc:'Order line items (optional)' },
+  { id:'stripe',       name:'Stripe',            icon:'⚡', file:'Stripe_Template.xlsx',        required:false, desc:'Stripe settlement report 2' },
+  { id:'paypal',       name:'PayPal',            icon:'🅿️', file:'PayPal_Template.xlsx',        required:false, desc:'PayPal activity report' },
+  { id:'payex',        name:'Payex',             icon:'💰', file:'Payex_Template.xlsx',         required:false, desc:'Payex settlement report 2' },
+  { id:'marketplace',  name:'Marketplace',       icon:'🏪', file:'Marketplace_Template.xlsx',   required:false, desc:'TikTok / Shopee / Lazada' },
+  { id:'fx_rates',     name:'FX Rates',          icon:'💱', file:'FX_Rates_Template.xlsx',      required:true,  desc:'Monthly exchange rates' },
+];
+
+const uploaded = {};
+
+// Render templates grid
+const tGrid = document.getElementById('templates-grid');
+tGrid.innerHTML = TEMPLATES.map(t => `
+  <div class="template-card">
+    <div class="template-card-icon">${t.icon}</div>
+    <div class="template-card-name">${t.name} ${t.required ? '<span style="color:var(--warning)">*</span>' : ''}</div>
+    <div class="template-card-desc">${t.desc}</div>
+    <a href="/api/templates/${t.file}" download class="btn-download">⬇ Download</a>
+  </div>
+`).join('');
+
+// Render upload grid
+const uGrid = document.getElementById('upload-grid');
+uGrid.innerHTML = TEMPLATES.map(t => `
+  <div class="upload-slot ${t.required ? 'required' : ''}" id="slot-${t.id}"
+       ondragover="handleDrag(event,'${t.id}')" ondragleave="handleDragLeave(event,'${t.id}')"
+       ondrop="handleDrop(event,'${t.id}')">
+    <input type="file" class="slot-file-input" accept=".xlsx,.xls"
+           onchange="handleFile(event,'${t.id}')" id="input-${t.id}">
+    <div class="slot-icon">${t.icon}</div>
+    <div class="slot-name">${t.name}</div>
+    <div class="slot-hint">Click or drag .xlsx here</div>
+    <div class="slot-status ${t.required ? 'req' : ''}" id="status-${t.id}">
+      ${t.required ? '⚠ Required' : 'Optional'}
+    </div>
+  </div>
+`).join('');
+
+window.handleDrag = (e, id) => { e.preventDefault(); document.getElementById(`slot-${id}`).classList.add('drag-over'); };
+window.handleDragLeave = (e, id) => { document.getElementById(`slot-${id}`).classList.remove('drag-over'); };
+window.handleDrop = (e, id) => {
+  e.preventDefault();
+  const slot = document.getElementById(`slot-${id}`);
+  slot.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processUpload(id, e.dataTransfer.files[0]);
+};
+window.handleFile = (e, id) => { if (e.target.files[0]) processUpload(id, e.target.files[0]); };
+
+async function processUpload(id, file) {
+  const slot = document.getElementById(`slot-${id}`);
+  const status = document.getElementById(`status-${id}`);
+  status.textContent = '⏳ Uploading...';
+  status.className = 'slot-status';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('type', id);
+  fd.append('period', document.getElementById('period-input').value);
+
+  try {
+    const r = await fetch('/api/upload', { method:'POST', body:fd });
+    const d = await r.json();
+    if (r.ok) {
+      uploaded[id] = { name: file.name, path: d.path };
+      slot.classList.add('uploaded');
+      slot.classList.remove('required');
+      status.textContent = `✅ ${file.name}`;
+      status.className = 'slot-status ok';
+      showToast(`${file.name} uploaded!`, 'success');
+    } else {
+      status.textContent = `❌ ${d.error}`;
+      status.className = 'slot-status';
+      showToast(d.error, 'error');
+    }
+  } catch(e) {
+    status.textContent = '❌ Upload failed';
+    showToast('Upload failed', 'error');
+  }
+  updateChecklist();
+}
+
+function updateChecklist() {
+  const req = TEMPLATES.filter(t => t.required);
+  const cl = document.getElementById('build-checklist');
+  cl.innerHTML = TEMPLATES.map(t => `
+    <span class="check-item ${uploaded[t.id] ? 'ok' : t.required ? 'missing' : ''}">
+      ${uploaded[t.id] ? '✅' : t.required ? '❌' : '○'} ${t.name}
+    </span>
+  `).join('');
+  const allReqDone = req.every(t => uploaded[t.id]);
+  document.getElementById('build-btn').disabled = !allReqDone;
+  if (!allReqDone) document.getElementById('build-btn').textContent = '⚠ Upload required files first';
+  else document.getElementById('build-btn').textContent = '▶ Build Dashboard Now';
+}
+
+window.buildDashboard = async () => {
+  const period = document.getElementById('period-input').value;
+  const btn = document.getElementById('build-btn');
+  const pBox = document.getElementById('progress-box');
+  const pBar = document.getElementById('progress-bar');
+  const pLog = document.getElementById('progress-log');
+
+  btn.disabled = true;
+  btn.textContent = '⚙️ Building...';
+  pBox.classList.add('show');
+  pLog.innerHTML = '';
+  pBar.style.width = '5%';
+
+  const log = (msg, pct) => {
+    pLog.innerHTML += `<div>> ${msg}</div>`;
+    pLog.scrollTop = pLog.scrollHeight;
+    if (pct) pBar.style.width = pct + '%';
+  };
+
+  log('Starting build for period: ' + period, 10);
+  try {
+    const r = await fetch('/api/build', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ period, files: uploaded })
+    });
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    while(true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = decoder.decode(value);
+      text.split('\n').forEach(line => {
+        if (!line.trim()) return;
+        try {
+          const d = JSON.parse(line);
+          if (d.log) log(d.log, d.pct);
+          if (d.done) {
+            pBar.style.width = '100%';
+            log('✅ Build complete! Dashboard updated.', 100);
+            showToast('Dashboard updated!', 'success');
+            setTimeout(() => window.location.href = '/dashboard', 2000);
+          }
+          if (d.error) {
+            log('❌ Error: ' + d.error);
+            showToast(d.error, 'error');
+          }
+        } catch { log(line); }
+      });
+    }
+  } catch(e) {
+    log('❌ Build failed: ' + e.message);
+    showToast('Build failed', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '▶ Build Dashboard Now';
+};
+
+window.downloadAll = () => {
+  TEMPLATES.forEach((t,i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = `/api/templates/${t.file}`;
+      a.download = t.file;
+      a.click();
+    }, i * 500);
+  });
+};
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// Init
+updateChecklist();
+document.getElementById('period-input').addEventListener('change', () => {
+  document.getElementById('topbar-period').textContent = 'Period: ' + document.getElementById('period-input').value;
+});
+document.getElementById('topbar-period').textContent = 'Period: ' + document.getElementById('period-input').value;
+</script>
+</body>
+</html>

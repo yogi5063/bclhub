@@ -363,6 +363,82 @@ app.get('/login.js', (req, res) => {
   res.sendFile(path.join(DIST, 'login.js'));
 });
 
+// ── Upload page ──────────────────────────────────────────────────────────────
+app.get('/upload', requireAuth, (req, res) => {
+  res.sendFile(path.join(DIST, 'upload.html'));
+});
+
+// ── Template downloads ────────────────────────────────────────────────────────
+const TEMPLATES_DIR = path.join(ROOT, 'templates');
+app.get('/api/templates/:filename', requireAuth, (req, res) => {
+  const file = path.join(TEMPLATES_DIR, path.basename(req.params.filename));
+  if (!existsSync(file)) return res.status(404).json({ error: 'Template not found' });
+  res.download(file);
+});
+
+// ── File upload endpoint ──────────────────────────────────────────────────────
+const uploadDir = process.env.UPLOAD_DIR || '/tmp/uploads';
+mkdirSync(uploadDir, { recursive: true });
+
+const uploadStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const session = req.user.sub?.replace(/[^a-z0-9]/gi, '') || 'default';
+    const dir = path.join(uploadDir, session);
+    mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const type = (req.body.type || 'file').replace(/[^a-z0-9_]/gi, '');
+    cb(null, `${type}_${Date.now()}.xlsx`);
+  },
+});
+const uploader = multer({ storage: uploadStorage, limits: { fileSize: 100 * 1024 * 1024 } });
+
+app.post('/api/upload', requireAuth, uploader.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+  res.json({ ok: true, path: req.file.path, name: req.file.filename, type: req.body.type });
+});
+
+// ── Build endpoint — streams progress ─────────────────────────────────────────
+app.post('/api/build', requireAuth, (req, res) => {
+  const { period = '2026-04' } = req.body || {};
+  const session = req.user.sub?.replace(/[^a-z0-9]/gi, '') || 'default';
+  const dir = path.join(uploadDir, session);
+  const scriptPath = path.join(__dirname, 'process_uploads.py');
+  const clientId = req.user.client_id || '';
+
+  res.setHeader('Content-Type', 'application/x-ndjson');
+  res.setHeader('Transfer-Encoding', 'chunked');
+  res.setHeader('Cache-Control', 'no-cache');
+
+  if (!existsSync(scriptPath)) {
+    res.write(JSON.stringify({ error: 'Processing script not found' }) + '\n');
+    return res.end();
+  }
+
+  const args = ['--period', period, '--upload-dir', dir];
+  if (clientId) args.push('--client-id', clientId);
+
+  const proc = spawn(PYTHON, [scriptPath, ...args], {
+    env: { ...process.env },
+    cwd: ROOT,
+  });
+
+  proc.stdout.on('data', (d) => res.write(d));
+  proc.stderr.on('data', (d) => {
+    const msg = d.toString().trim();
+    if (msg) res.write(JSON.stringify({ log: `[stderr] ${msg}` }) + '\n');
+  });
+  proc.on('close', (code) => {
+    if (code !== 0) res.write(JSON.stringify({ error: `Process exited with code ${code}` }) + '\n');
+    res.end();
+  });
+  proc.on('error', (e) => {
+    res.write(JSON.stringify({ error: e.message }) + '\n');
+    res.end();
+  });
+});
+
 // Hashed assets: cache 1 year (filename changes on every build)
 app.use('/assets', express.static(path.join(DIST, 'assets'), {
   maxAge: '1y',
