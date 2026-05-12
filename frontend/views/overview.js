@@ -34,8 +34,14 @@ function renderOverview(state) {
                   '#7030A0','#70AD47','#ED7D31','#4472C4','#FFC000','#FF0000','#00B0F0','#00B050'];
 
   main.innerHTML = `
-    <div class="section-header"><h2>Overview · March 2026</h2>
+    <div class="section-header"><h2>Overview · ${state.period || 'March 2026'}</h2>
       <p class="section-desc grey">All figures in ${dCcy}. ${results.length} territories.</p></div>
+
+    <!-- Data Source Toggle -->
+    <div id="source-toggle-container"></div>
+
+    <!-- AI Overview Intelligence Panel -->
+    <div id="insights-overview"></div>
 
     <!-- Row 1: Revenue KPIs -->
     <div class="kpi-strip">
@@ -220,4 +226,18 @@ function renderOverview(state) {
       });
     }
   }, 100);
+
+  // ── Source Toggle ────────────────────────────────────────────────────────────
+  if (window.renderSourceToggle) {
+    const currentSource = state.dataSource || 'system_workbook';
+    window.renderSourceToggle('source-toggle-container', currentSource, async (newSource) => {
+      // Reload data from new source
+      if (window.switchDataSource) window.switchDataSource(newSource);
+    });
+  }
+
+  // ── AI Insights Panel ────────────────────────────────────────────────────────
+  if (window.renderInsightsPanel && state._rawCache) {
+    window.renderInsightsPanel('overview', 'insights-overview', state._rawCache, state._prevCache);
+  }
 }

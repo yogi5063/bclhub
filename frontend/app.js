@@ -1,4 +1,5 @@
 // app.js — Entry point: orchestration, state, event wiring
+// AI Insights are in ai-insights.js (loaded first in bundle, exposed globally)
 
 const STATE = {
   // Multi-period data: { 'India||2026-01': TerritoryResult, ... }
@@ -788,16 +789,28 @@ async function initDataFetch() {
   const statusEl  = document.getElementById('folder-status');
   const refreshBtn = document.getElementById('refresh-data-btn');
 
+  // ── Data source: 'system_workbook' | 'manual_upload' | 'all'
+  STATE.dataSource = localStorage.getItem('bclhub_datasource') || 'system_workbook';
+
+  // Expose globally for source toggle component
+  window.switchDataSource = async (newSource) => {
+    STATE.dataSource = newSource;
+    localStorage.setItem('bclhub_datasource', newSource);
+    await loadData();
+  };
+
   async function loadData() {
     statusEl.textContent = 'Loading...';
     statusEl.className = 'folder-status grey';
+    const sourceParam = STATE.dataSource !== 'all' ? `?source=${STATE.dataSource}` : '';
     try {
-      const resp = await fetch('/api/data', { credentials: 'include' });
+      const resp = await fetch(`/api/data${sourceParam}`, { credentials: 'include' });
       if (!resp.ok) {
         const e = await resp.json().catch(() => ({}));
         throw new Error(e.error || `HTTP ${resp.status}`);
       }
       const json = await resp.json();
+      STATE._rawCache = json;   // store raw cache for AI insights
       STATE.allParsed = json.parsed || {};
 
       const periods     = getAvailablePeriods();

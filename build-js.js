@@ -37,6 +37,7 @@ const APP_SCRIPTS = [
   'views/reconciliation.js',
   'views/gateway-recon.js',
   'views/explorer.js',
+  'ai-insights.js', // AI section insights — before app.js
   'app.js',
   'upload-consolidated.js',
   'ai-chat.js',  // AI CFO chat interface — must load last

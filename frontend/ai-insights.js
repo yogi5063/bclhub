@@ -34,7 +34,7 @@ const INSIGHT_BORDER = {
 };
 
 // ── Main function: generate + render insights for a section ────────────────────
-export async function renderInsightsPanel(section, containerId, data, prevData = null, options = {}) {
+async function renderInsightsPanel(section, containerId, data, prevData = null, options = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -158,7 +158,7 @@ function insightsPanelHTML(section, insights, loading, cached = false, error = n
 }
 
 // ── Source toggle component ────────────────────────────────────────────────────
-export function renderSourceToggle(containerId, currentSource, onSwitch) {
+function renderSourceToggle(containerId, currentSource, onSwitch) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -209,7 +209,7 @@ export function renderSourceToggle(containerId, currentSource, onSwitch) {
 }
 
 // ── Batch generate all section insights ───────────────────────────────────────
-export async function generateAllInsights(data, prevData = null) {
+async function generateAllInsights(data, prevData = null) {
   const sections = ['overview', 'revenue', 'payments', 'products', 'pl', 'leakage'];
 
   // Fire all in parallel (Orchestrator-Workers pattern)
