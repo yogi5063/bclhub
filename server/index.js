@@ -403,9 +403,9 @@ const sourceUploadStorage = multer.diskStorage({
     cb(null, `${type}_${Date.now()}.xlsx`);
   },
 });
-const uploader = multer({ storage: sourceUploadStorage, limits: { fileSize: 100 * 1024 * 1024 } });
+const sourceUploader = multer({ storage: sourceUploadStorage, limits: { fileSize: 100 * 1024 * 1024 } });
 
-app.post('/api/upload', requireAuth, uploader.single('file'), (req, res) => {
+app.post('/api/source-upload', requireAuth, sourceUploader.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file received' });
   res.json({ ok: true, path: req.file.path, name: req.file.filename, type: req.body.type });
 });

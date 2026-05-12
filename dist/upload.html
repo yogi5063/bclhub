@@ -382,7 +382,7 @@ window.handleUpload = async (id, input) => {
   fd.append('type', id);
   fd.append('period', document.getElementById('period').value);
   try {
-    const r = await fetch('/api/upload', { method:'POST', body:fd });
+    const r = await fetch('/api/source-upload', { method:'POST', body:fd });
     const d = await r.json();
     if (r.ok) {
       ready[id] = true;
