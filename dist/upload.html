@@ -140,6 +140,12 @@
   <div class="page-title">📤 Upload & Build Dashboard</div>
   <div class="page-sub">Fetch data via API or upload manually — mix and match as needed</div>
 
+  <!-- How-to tip -->
+  <div style="background:#0f2d1e;border:1px solid #166534;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#86efac">
+    💡 <strong>How to upload:</strong> Just export your files from Wix/Stripe/PayPal/Payex dashboards and click <strong>Upload Excel</strong> on each row.
+    You don't need to use the Column Guide — it's only a format reference if you want to understand the column structure.
+  </div>
+
   <!-- Period -->
   <div class="period-bar">
     <label>Report Period</label>
@@ -166,7 +172,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('wix_orders',this)">
         📁 Upload Excel
       </div>
-      <a href="/api/templates/Wix_Orders_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Wix_Orders_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
     <div class="api-config" id="cfg-wix_orders"></div>
   </div>
@@ -187,7 +193,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('wix_payments',this)">
         📁 Upload Excel
       </div>
-      <a href="/api/templates/Wix_Payments_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Wix_Payments_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -210,7 +216,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('payex',this)">
         📁 Upload Excel
       </div>
-      <a href="/api/templates/Payex_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Payex_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
     <div class="api-config" id="cfg-payex">
       <label>Payex Registered Email</label>
@@ -237,7 +243,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('stripe',this)">
         📁 Upload Report 2
       </div>
-      <a href="/api/templates/Stripe_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Stripe_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -256,7 +262,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('paypal',this)">
         📁 Upload Activity
       </div>
-      <a href="/api/templates/PayPal_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/PayPal_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -278,7 +284,7 @@
         <input type="file" accept=".xlsx,.xls,.csv,.pdf" onchange="handleUpload('bank_7011',this)">
         📁 Upload Statement
       </div>
-      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -297,7 +303,7 @@
         <input type="file" accept=".xlsx,.xls,.csv,.pdf" onchange="handleUpload('bank_7901',this)">
         📁 Upload Statement
       </div>
-      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Bank_Statement_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -318,7 +324,7 @@
         <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('marketplace',this)">
         📁 Upload
       </div>
-      <a href="/api/templates/Marketplace_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/Marketplace_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
@@ -339,7 +345,7 @@
         <input type="file" accept=".xlsx,.xls" onchange="handleUpload('fx_rates',this)">
         📁 Upload
       </div>
-      <a href="/api/templates/FX_Rates_Template.xlsx" download class="btn-tmpl">⬇ Template</a>
+      <a href="/api/templates/FX_Rates_Template.xlsx" download class="btn-tmpl">📋 Column Guide (format reference only)</a>
     </div>
   </div>
 
