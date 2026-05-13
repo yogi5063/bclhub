@@ -143,9 +143,114 @@ def empty_territory(name):
 
 data = {t: empty_territory(t) for t in ALL_TERRITORIES}
 
+# ── Helper: find multiple files matching a prefix ─────────────────────────────
+def find_files(prefix):
+    """Find ALL uploaded files matching prefix (handles multiple territory files)."""
+    found = []
+    for f in os.listdir(UPLOAD_DIR):
+        flower = f.lower()
+        if flower.startswith(prefix.lower()) and (flower.endswith('.xlsx') or flower.endswith('.csv') or flower.endswith('.json')):
+            found.append(os.path.join(UPLOAD_DIR, f))
+    return found
+
+def read_csv_orders(filepath, territory_override=None):
+    """Read orders from a CSV file (per-territory export format)."""
+    import csv as csv_module
+    rows_data = []
+    try:
+        with open(filepath, encoding='utf-8-sig', errors='replace') as fh:
+            reader = csv_module.DictReader(fh)
+            for row in reader:
+                rows_data.append((row, territory_override))
+    except Exception as e:
+        emit(f'CSV read warning {filepath}: {e}')
+    return rows_data
+
+def process_order_row(row_dict, territory_override=None):
+    """Process one order row dict → accumulate into data dict."""
+    # Normalise keys to lowercase
+    row = {k.lower().strip(): v for k, v in row_dict.items()}
+    cur = str(row.get('currency', 'MYR') or 'MYR').strip()
+    region = str(row.get('region', '') or '')
+    billing_country = str(row.get('billing country', '') or row.get('delivery country', ''))
+    ter = territory_override or detect_territory(region, billing_country)
+    d = data[ter]
+
+    gross_native = safe(row.get('total', 0))
+    ref_native   = safe(row.get('refunded amount', 0))
+    ship_native  = safe(row.get('shipping rate', 0))
+    tax_native   = safe(row.get('total tax', 0))
+    net_native   = gross_native - ref_native
+
+    d['gross']        += to_myr(gross_native, cur)
+    d['net']          += to_myr(net_native, cur)
+    d['refund_total'] += to_myr(ref_native, cur)
+    d['shipping']     += to_myr(ship_native, cur)
+    d['tax']          += to_myr(tax_native, cur)
+    d['orders']       += 1
+
+    pay = str(row.get('payment status', '') or '').strip()
+    ful = str(row.get('fulfillment status', '') or '').strip()
+    if pay == 'Paid': d['orders_paid'] += 1
+    elif pay in ('Refunded','Partially refunded'): d['orders_refunded'] += 1
+    else: d['orders_unpaid'] += 1
+    if ful == 'Fulfilled': d['fulfilled'] += 1
+    elif ful == 'Unfulfilled': d['unfulfilled'] += 1
+
 # ── Process Wix Orders ────────────────────────────────────────────────────────
+# Handle 3 formats:
+# 1. Single combined XLSX (March format: has 'Region' col)
+# 2. Per-territory CSVs (April format: one CSV per territory)
+# 3. API-fetched JSON (from Wix API with territory already tagged)
+
+# Check for per-territory CSVs first (April format: files named by territory)
+TERRITORY_CSV_MAP = {
+    'korea': 'Korea', 'japan': 'Japan', 'europe': 'Europe', 'gcc': 'GCC',
+    'usa': 'USA', 'latam': 'Latam', 'brazil': 'Brasil', 'brasil': 'Brasil',
+    'oceania': 'Oceania', 'india': 'India', 'indonesia': 'Indonesia',
+    'philippines': 'Philippines', 'thailand': 'Thailand', 'malaysia': 'Malaysia',
+    'molnu': 'Molnu',
+}
+ter_csvs = []
+for f in os.listdir(UPLOAD_DIR):
+    fl = f.lower()
+    if fl.endswith('.csv'):
+        for key, ter in TERRITORY_CSV_MAP.items():
+            if key in fl and ('order' in fl or 'payment' not in fl):
+                ter_csvs.append((os.path.join(UPLOAD_DIR, f), ter))
+                break
+
+if ter_csvs:
+    emit(f'Reading per-territory order CSVs ({len(ter_csvs)} files)...', 15)
+    total_rows = 0
+    for fpath, territory in ter_csvs:
+        rows = read_csv_orders(fpath, territory)
+        for row_dict, ter_override in rows:
+            process_order_row(row_dict, ter_override)
+            total_rows += 1
+    emit(f'Orders (CSV): {total_rows} rows across territories', 30)
+
+# Also check for API JSON format
+api_json = find_file('wix_orders')
+if api_json and api_json.endswith('.json'):
+    emit('Reading Wix Orders from API fetch...', 15)
+    import json as _json
+    with open(api_json, encoding='utf-8') as f:
+        api_data = _json.load(f)
+    for order in api_data.get('rows', []):
+        ter = order.get('_territory', 'Malaysia')
+        cur = order.get('currency', 'MYR')
+        gross = safe(order.get('priceSummary', {}).get('total', {}).get('amount', 0))
+        refund = safe(order.get('priceSummary', {}).get('refund', {}).get('amount', 0))
+        d = data.get(ter, data['Malaysia'])
+        d['gross'] += to_myr(gross, cur)
+        d['net']   += to_myr(gross - refund, cur)
+        d['orders'] += 1
+        if order.get('paymentStatus') == 'PAID': d['orders_paid'] += 1
+    emit(f'Orders (API): {len(api_data.get("rows",[]))} from Wix API', 30)
+
 orders_file = find_file('wix_orders')
-if orders_file:
+if orders_file and orders_file.endswith('.xlsx') and not ter_csvs:
     emit('Reading Wix Orders...', 15)
     try:
         wb = load_workbook(orders_file, data_only=True, read_only=True)

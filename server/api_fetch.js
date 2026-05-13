@@ -17,6 +17,23 @@ const PAYEX_KEY      = process.env.PAYEX_KEY;
 const PAYEX_SECRET   = process.env.PAYEX_SECRET;
 const UPLOAD_DIR     = process.env.UPLOAD_DIR || '/tmp/uploads';
 
+// All 18 Wix site IDs mapped to territory names
+const WIX_SITES = {
+  'Korea':       '17043d52-7f40-4b38-8a3d-f794e3925bfc',
+  'Japan':       '6c7bdef5-3ec0-4477-bb76-1cb814287625',
+  'GCC':         '20e8cd54-1c95-4183-87a4-f9a4ae383b11',
+  'USA':         'b510eda0-79a6-4eff-ae8b-7fdf3a3e85f3',
+  'Oceania':     '91abf981-b3ba-48e7-8f4c-fefce269bedc',
+  'Brasil':      '03b3dacc-bda1-48de-bada-e6a1c4256464',
+  'Europe':      'fd926fda-20c9-49bd-8e13-acf63d76c2f1',
+  'Latam':       '34bacec8-3b2b-4666-ab63-b4b5b7a7380d',
+  'Molnu':       'e7fa3f4d-73b5-4877-80f7-3ee4e02c475d',
+  'India':       'b84c2ff5-0db5-4e0a-a464-6e4700d15c52',
+  'Philippines': '26351b4b-056f-4c5a-85a2-d1d7f78baaa9',
+  'Indonesia':   'b4e5bcba-dc66-4970-82ef-420adede603f',
+  'Thailand':    '052bf229-39ca-4320-98fe-892627e83d29',
+};
+
 function sessionDir(req) {
   const session = (req.user.sub || 'default').replace(/[^a-z0-9]/gi, '');
   const dir = path.join(UPLOAD_DIR, session);
@@ -46,39 +63,53 @@ fetchRouter.post('/fetch-wix', async (req, res) => {
     let endpoint, label, count = 0, rows = [];
 
     if (type === 'wix_orders') {
-      // Fetch orders page by page
-      let cursor = null;
-      do {
-        const body = {
-          search: {
-            filter: {
-              _createdDate: { $gte: start + 'T00:00:00.000Z', $lte: end + 'T23:59:59.999Z' }
-            },
-            cursorPaging: { limit: 100, ...(cursor ? { cursor } : {}) }
-          }
-        };
-        const r = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': WIX_API_KEY,
-            'wix-account-id': WIX_ACCOUNT_ID,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
-        const data = await r.json();
-        if (!r.ok || data.message) {
-          return res.status(400).json({ error: data.message || 'Wix API error — check permissions' });
-        }
-        rows.push(...(data.orders || []));
-        cursor = data.metadata?.cursors?.next;
-        count += (data.orders || []).length;
-      } while (cursor && rows.length < 5000);
+      // Fetch orders from ALL Wix sites
+      const allOrders = [];
+      const siteResults = {};
 
-      // Save as JSON for process_uploads.py to read
+      for (const [territory, siteId] of Object.entries(WIX_SITES)) {
+        let cursor = null, siteCount = 0;
+        do {
+          const body = {
+            search: {
+              cursorPaging: { limit: 100, ...(cursor ? { cursor } : {}) },
+              sort: [{ fieldName: '_createdDate', order: 'DESC' }]
+            }
+          };
+          const r = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': WIX_API_KEY,
+              'wix-account-id': WIX_ACCOUNT_ID,
+              'wix-site-id': siteId,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
+          const data = await r.json();
+          if (!r.ok || data.message) { break; }
+          // Filter to requested period
+          const periodOrders = (data.orders || []).filter(o => {
+            const d = o._createdDate || o.dateCreated || '';
+            return d.startsWith(period);
+          });
+          allOrders.push(...periodOrders.map(o => ({ ...o, _territory: territory })));
+          siteCount += periodOrders.length;
+          cursor = data.metadata?.cursors?.next;
+          // Stop if no orders in this page match the period (sorted DESC)
+          if ((data.orders || []).length > 0) {
+            const oldestDate = data.orders[data.orders.length - 1]?._createdDate || '';
+            if (oldestDate && oldestDate < period + '-01') break;
+          }
+          if (!cursor || allOrders.length > 10000) break;
+        } while (cursor);
+        siteResults[territory] = siteCount;
+        count += siteCount;
+      }
+
       const outPath = path.join(dir, `wix_orders_${Date.now()}.json`);
-      writeFileSync(outPath, JSON.stringify({ period, rows, fetched_at: new Date().toISOString() }));
-      return res.json({ ok: true, count, path: outPath, source: 'wix_api' });
+      writeFileSync(outPath, JSON.stringify({ period, rows: allOrders, site_counts: siteResults, fetched_at: new Date().toISOString() }));
+      return res.json({ ok: true, count, site_counts: siteResults, path: outPath, source: 'wix_api' });
 
     } else if (type === 'wix_payments') {
       // Fetch transactions
