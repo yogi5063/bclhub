@@ -356,6 +356,67 @@ app.get('/clear', (req, res) => {
   res.redirect('/login');
 });
 
+// ── EasyStore OAuth Callback (public — no auth required) ──────────────────
+app.get('/easystore/callback', async (req, res) => {
+  const { code, shop } = req.query;
+  if (!code || !shop) {
+    return res.status(400).send('<h2>EasyStore OAuth Error</h2><p>Missing code or shop parameter.</p>');
+  }
+
+  const APP_ID     = process.env.EASYSTORE_APP_ID;
+  const APP_SECRET = process.env.EASYSTORE_APP_SECRET;
+
+  if (!APP_ID || !APP_SECRET) {
+    return res.status(500).send('<h2>EasyStore Error</h2><p>App credentials not configured on server.</p>');
+  }
+
+  try {
+    // Exchange code for access token
+    const tokenUrl = `https://${shop}/api/3.0/oauth/access_token.json`;
+    const tokenResp = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: APP_ID, client_secret: APP_SECRET, code })
+    });
+    const tokenData = await tokenResp.json();
+
+    if (!tokenData.access_token) {
+      return res.status(400).send(`<h2>Token Exchange Failed</h2><pre>${JSON.stringify(tokenData, null, 2)}</pre>`);
+    }
+
+    const accessToken = tokenData.access_token;
+    console.log(`[EasyStore] ✅ Access token obtained for shop: ${shop}`);
+
+    // Test: fetch first order
+    const testResp = await fetch(`https://${shop}/api/3.0/orders.json?limit=1`, {
+      headers: { 'EasyStore-Access-Token': accessToken }
+    });
+    const testData = await testResp.json();
+    const orderCount = testData.orders?.length || 0;
+
+    // Return success page with token info
+    res.send(`<!DOCTYPE html>
+<html><head><title>EasyStore Connected</title>
+<style>body{font-family:sans-serif;background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px;max-width:600px;text-align:center}
+h1{color:#22d3ee}pre{background:#0f172a;border-radius:8px;padding:16px;text-align:left;font-size:12px;overflow:auto}
+.btn{display:inline-block;margin-top:20px;padding:12px 28px;background:#6366f1;color:white;border-radius:8px;text-decoration:none;font-weight:700}</style>
+</head><body><div class="box">
+<h1>✅ EasyStore Connected!</h1>
+<p><strong>Shop:</strong> ${shop}</p>
+<p>Test fetch returned <strong>${orderCount} order(s)</strong></p>
+<p style="color:#94a3b8;font-size:12px">Save this access token to your .env and Render environment:</p>
+<pre>EASYSTORE_SHOP=${shop}
+EASYSTORE_ACCESS_TOKEN=${accessToken}</pre>
+<p style="color:#f59e0b;font-size:12px">⚠️ Copy the token above NOW and save it — this page won't show it again.</p>
+<a href="/dashboard" class="btn">← Back to Dashboard</a>
+</div></body></html>`);
+
+  } catch (err) {
+    res.status(500).send(`<h2>Error</h2><pre>${err.message}</pre>`);
+  }
+});
+
 // ── Login page — served without auth ───────────────────────────────────────
 app.get('/login', (req, res) => {
   res.sendFile(path.join(DIST, 'login.html'));
